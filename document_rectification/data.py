@@ -1,5 +1,9 @@
 import ez_torch
+import kornia
+import matplotlib.pyplot as plt
 import torch
+from kornia import augmentation
+from torch import nn
 from torchvision.datasets.folder import ImageFolder
 from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTensor
 
@@ -27,16 +31,40 @@ def get_dl(path, bs, shuffle):
     return dl
 
 
+def get_augmentor():
+    # augmentor = Compose(
+    #     [
+    #         kornia.augmentation.RandomAffine(
+    #             degrees=30,
+    #             translate=[0.1, 0.1],
+    #             scale=[0.9, 1.1],
+    #             shear=[-10, 10],
+    #         ),
+    #         kornia.augmentation.RandomPerspective(0.6, p=0.5),
+    #     ]
+    # )
+    augmentor = kornia.augmentation.RandomPerspective(0.6, p=0.9)
+    return augmentor
+
+
 def main():
     documents_path = ".data/dataset/training_data/"
     dl = get_dl(documents_path, bs=16, shuffle=True)
-    import matplotlib.pyplot as plt
+    augmentor = get_augmentor()
 
     X, _ = next(iter(dl))
-    iar = X.ez.grid(nr=4).imshow(figsize=(8, 8))
-    plt.show()
 
-    print("hello world")
+    params = augmentor.forward_parameters(X.shape)
+
+    mask = torch.ones_like(X)
+    bg = torch.ones_like(X)
+    bg[:, 1] = 0
+
+    X = augmentor(X, params)
+    mask = augmentor(mask, params)
+
+    (X + bg * (1 - mask)).ez.grid(nr=4).imshow(figsize=(8, 8))
+    plt.show()
 
 
 if __name__ == "__main__":
