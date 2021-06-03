@@ -1,0 +1,9 @@
+{
+  "python.pythonPath": "/home/izpc/.cache/pypoetry/virtualenvs/document-rectification--WscroQJ-py3.7/bin/python",
+  "python.formatting.provider": "black",
+  "[python]": {
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+      }
+  }
+}
