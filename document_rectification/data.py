@@ -1,7 +1,9 @@
 import ez_torch
 import kornia
 import matplotlib.pyplot as plt
+import pytorch_lightning as pl
 import torch
+import torchvision
 from kornia import augmentation
 from torch import nn
 from torchvision.datasets.folder import ImageFolder
@@ -9,22 +11,12 @@ from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTens
 
 
 def map_dl(mapper, dl):
-    class Iter:
-        def __init__(self) -> None:
-            self.it = iter(dl)
-
-        def __len__(self):
-            return len(dl)
-
-        def __next__(self):
-            return mapper(next(self.it))
-
     class DL:
         def __len__(self):
             return len(dl)
 
         def __iter__(self):
-            return Iter()
+            return (mapper(b) for b in dl)
 
     return DL()
 
@@ -108,32 +100,28 @@ def get_augmented_dl(path, bs, shuffle):
     return map_dl(mapper, dl)
 
 
-def get_train_dl(bs, shuffle):
-    dl = get_augmented_dl(
-        ".data/dataset/training_data/",
-        bs=bs,
-        shuffle=shuffle,
-    )
-    return dl
+def get_datamodule(train_bs, val_bs, plot_bs):
+    TRAIN_PATH = ".data/dataset/training_data/"
+    TEST_PATH = ".data/dataset/testing_data/"
 
+    class DataModule(pl.LightningDataModule):
+        def plot_dl(self):
+            dl = get_augmented_dl(TRAIN_PATH, bs=plot_bs, shuffle=False)
+            example_batch = next(iter(dl))
+            return [example_batch]
 
-def get_eval_dl(bs, shuffle):
-    dl = get_augmented_dl(
-        ".data/dataset/testing_data/",
-        bs=bs,
-        shuffle=shuffle,
-    )
-    return dl
+        def train_dataloader(self):
+            return get_augmented_dl(TRAIN_PATH, bs=train_bs, shuffle=True)
 
+        def val_dataloader(self):
+            return get_augmented_dl(TEST_PATH, bs=val_bs, shuffle=False)
 
-def get_plot_dl(bs):
-    dl = get_train_dl(bs=bs, shuffle=False)
-    example_batch = next(iter(dl))
-    return [example_batch]
+    return DataModule()
 
 
 def main():
-    dl = get_plot_dl(bs=16)
+    dm = get_datamodule(train_bs=32, val_bs=32, plot_bs=16)
+    dl = dm.plot_dl()
     batch = next(iter(dl))
     batch["x"].ez.grid(nr=4).imshow(figsize=(8, 8))
     plt.show()
