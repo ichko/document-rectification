@@ -2,3 +2,4 @@ __pycache__
 .reports
 .ipynb_checkpoints
 .data
+lightning_logs
