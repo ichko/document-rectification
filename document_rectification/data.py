@@ -8,7 +8,49 @@ from torchvision.datasets.folder import ImageFolder
 from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTensor
 
 
-def get_dataset(path):
+def map_dl(mapper, dl):
+    class Iter:
+        def __init__(self) -> None:
+            self.it = iter(dl)
+
+        def __len__(self):
+            return len(dl)
+
+        def __next__(self):
+            return mapper(next(self.it))
+
+    class DL:
+        def __len__(self):
+            return len(dl)
+
+        def __iter__(self):
+            return Iter()
+
+    return DL()
+
+
+class ParamCompose:
+    def __init__(self, functions):
+        self.functions = functions
+
+    def __call__(self, inp, params=None):
+        if params is None:
+            params = [None] * len(self.functions)
+
+        for f, p in zip(self.functions, params):
+            inp = f(inp, p)
+
+        return inp
+
+    def forward_parameters(self, shape):
+        params = []
+        for f in self.functions:
+            p = f.forward_parameters(shape)
+            params.append(p)
+
+        return params
+
+
     scale = 0.5
     H, W = 1000, 762
     H, W = int(H * scale), int(W * scale)
