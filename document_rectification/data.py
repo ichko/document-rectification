@@ -51,6 +51,7 @@ class ParamCompose:
         return params
 
 
+def get_dl(path, bs, shuffle):
     scale = 0.5
     H, W = 1000, 762
     H, W = int(H * scale), int(W * scale)
@@ -60,11 +61,6 @@ class ParamCompose:
             [ToTensor(), Normalize((0,), (1,)), Resize((H, W))],
         ),
     )
-    return ds
-
-
-def get_dl(path, bs, shuffle):
-    ds = get_dataset(path)
     dl = torch.utils.data.DataLoader(
         dataset=ds,
         batch_size=bs,
@@ -74,38 +70,72 @@ def get_dl(path, bs, shuffle):
 
 
 def get_augmentor():
-    # augmentor = Compose(
-    #     [
-    #         kornia.augmentation.RandomAffine(
-    #             degrees=30,
-    #             translate=[0.1, 0.1],
-    #             scale=[0.9, 1.1],
-    #             shear=[-10, 10],
-    #         ),
-    #         kornia.augmentation.RandomPerspective(0.6, p=0.5),
-    #     ]
-    # )
-    augmentor = kornia.augmentation.RandomPerspective(0.6, p=0.9)
+    augmentor = ParamCompose(
+        [
+            kornia.augmentation.RandomAffine(
+                degrees=15,
+                translate=[0.1, 0.1],
+                scale=[0.9, 1.1],
+                shear=[-10, 10],
+            ),
+            kornia.augmentation.RandomPerspective(0.6, p=0.9),
+        ]
+    )
     return augmentor
 
 
-def main():
-    documents_path = ".data/dataset/training_data/"
-    dl = get_dl(documents_path, bs=16, shuffle=True)
+def get_augmented_dl(path, bs, shuffle):
+    dl = get_dl(path, bs=bs, shuffle=shuffle)
     augmentor = get_augmentor()
 
-    X, _ = next(iter(dl))
+    def mapper(batch):
+        X, _ = batch
+        params = augmentor.forward_parameters(X.shape)
 
-    params = augmentor.forward_parameters(X.shape)
+        mask = torch.ones_like(X)
+        bg = torch.ones_like(X)
+        bg[:, 1] = 0
 
-    mask = torch.ones_like(X)
-    bg = torch.ones_like(X)
-    bg[:, 1] = 0
+        X = augmentor(X, params)
+        mask = augmentor(mask, params)
+        transformed_X = X + bg * (1 - mask)
 
-    X = augmentor(X, params)
-    mask = augmentor(mask, params)
+        return {
+            "x": transformed_X,
+            "y": X,
+        }
 
-    (X + bg * (1 - mask)).ez.grid(nr=4).imshow(figsize=(8, 8))
+    return map_dl(mapper, dl)
+
+
+def get_train_dl(bs, shuffle):
+    dl = get_augmented_dl(
+        ".data/dataset/training_data/",
+        bs=bs,
+        shuffle=shuffle,
+    )
+    return dl
+
+
+def get_eval_dl(bs, shuffle):
+    dl = get_augmented_dl(
+        ".data/dataset/testing_data/",
+        bs=bs,
+        shuffle=shuffle,
+    )
+    return dl
+
+
+def get_plot_dl(bs):
+    dl = get_train_dl(bs=bs, shuffle=False)
+    example_batch = next(iter(dl))
+    return [example_batch]
+
+
+def main():
+    dl = get_plot_dl(bs=16)
+    batch = next(iter(dl))
+    batch["x"].ez.grid(nr=4).imshow(figsize=(8, 8))
     plt.show()
 
 
