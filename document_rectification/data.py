@@ -21,11 +21,12 @@ def map_dl(mapper, dl):
     return DL()
 
 
-class ParamCompose:
+class ParamCompose(nn.Module):
     def __init__(self, functions):
-        self.functions = functions
+        super().__init__()
+        self.functions = nn.ModuleList(functions)
 
-    def __call__(self, inp, params=None):
+    def forward(self, inp, params=None):
         if params is None:
             params = [None] * len(self.functions)
 
@@ -34,11 +35,14 @@ class ParamCompose:
 
         return inp
 
-    def forward_parameters(self, shape):
+    def forward_parameters(self, shape, device="cpu"):
         params = []
         for f in self.functions:
             p = f.forward_parameters(shape)
-            params.append(p)
+            pp = {}
+            for k, v in p.items():
+                pp[k] = v.to(device)
+            params.append(pp)
 
         return params
 
@@ -57,6 +61,8 @@ def get_dl(path, bs, shuffle):
         dataset=ds,
         batch_size=bs,
         shuffle=shuffle,
+        num_workers=0,
+        drop_last=False,
     )
     return dl
 
@@ -72,20 +78,21 @@ def get_augmentor():
             ),
             kornia.augmentation.RandomPerspective(0.6, p=0.9),
         ]
-    )
+    ).eval()
     return augmentor
 
 
-def get_augmented_dl(path, bs, shuffle):
+def get_augmented_dl(path, bs, shuffle, device="cuda"):
     dl = get_dl(path, bs=bs, shuffle=shuffle)
     augmentor = get_augmentor()
 
     def mapper(batch):
         X, _ = batch
-        params = augmentor.forward_parameters(X.shape)
+        X = X.to(device)
+        params = augmentor.forward_parameters(X.shape, device=device)
 
-        mask = torch.ones_like(X)
-        bg = torch.ones_like(X)
+        mask = torch.ones_like(X, device=device)
+        bg = torch.ones_like(X, device=device)
         bg[:, 1] = 0
 
         X = augmentor(X, params)
@@ -122,6 +129,13 @@ def get_datamodule(train_bs, val_bs, plot_bs):
 def main():
     dm = get_datamodule(train_bs=32, val_bs=32, plot_bs=16)
     dl = dm.plot_dl()
+
+    i = 0
+    for _ in range(100):
+        for b in dm.train_dataloader():
+            print(i)
+            i += 1
+
     batch = next(iter(dl))
     batch["x"].ez.grid(nr=4).imshow(figsize=(8, 8))
     plt.show()
