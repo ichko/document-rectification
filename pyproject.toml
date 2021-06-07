@@ -17,6 +17,7 @@ matplotlib = "^3.4.2"
 kornia = "^0.5.3"
 pytorch-lightning = "^1.3.4"
 ez-torch = {git = "https://github.com/ichko/ez-torch", rev = "master"}
+tensorboard = "2.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
