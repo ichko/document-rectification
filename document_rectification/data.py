@@ -16,9 +16,28 @@ def map_dl(mapper, dl):
             return len(dl)
 
         def __iter__(self):
-            return (mapper(b) for b in dl)
+            return (mapper(b, i) for i, b in enumerate(dl))
 
     return DL()
+
+
+def cache_dl(dl):
+    buffer = []
+
+    class CachedDL:
+        def __len__(self):
+            return len(dl)
+
+        def __iter__(self):
+            if len(buffer) > 0:
+                for b in buffer:
+                    yield b
+            else:
+                for b in dl:
+                    buffer.append(b)
+                    yield b
+
+    return CachedDL()
 
 
 class ParamCompose(nn.Module):
@@ -61,8 +80,9 @@ def get_dl(path, bs, shuffle):
         dataset=ds,
         batch_size=bs,
         shuffle=shuffle,
-        num_workers=0,
+        num_workers=4,
         drop_last=False,
+        persistent_workers=True,
     )
     return dl
 
@@ -86,7 +106,7 @@ def get_augmented_dl(path, bs, shuffle, device="cuda"):
     dl = get_dl(path, bs=bs, shuffle=shuffle)
     augmentor = get_augmentor()
 
-    def mapper(batch):
+    def mapper(batch, _idx):
         X, _ = batch
         X = X.to(device)
         params = augmentor.forward_parameters(X.shape, device=device)
@@ -104,7 +124,7 @@ def get_augmented_dl(path, bs, shuffle, device="cuda"):
             "y": X,
         }
 
-    return map_dl(mapper, dl)
+    return map_dl(mapper, cache_dl(dl))
 
 
 def get_datamodule(train_bs, val_bs, plot_bs):
@@ -128,11 +148,11 @@ def get_datamodule(train_bs, val_bs, plot_bs):
 
 def main():
     dm = get_datamodule(train_bs=32, val_bs=32, plot_bs=16)
-    dl = dm.plot_dl()
+    dl = dm.train_dataloader()
 
     i = 0
     for _ in range(100):
-        for b in dm.train_dataloader():
+        for b in dl:
             print(i)
             i += 1
 
