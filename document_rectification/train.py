@@ -65,6 +65,7 @@ def main():
         logger=[tb_logger],
         log_every_n_steps=1,
         flush_logs_every_n_steps=3,
+        max_epochs=100,
     )
     trainer.fit(model, datamodule=datamodule)
 
