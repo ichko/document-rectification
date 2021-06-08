@@ -42,27 +42,31 @@ class GeometricTransformModel(pl.LightningModule):
         loss = self.criterion(y_hat, y)
 
         self.log("loss", loss)
-
         return loss
 
 
 def main():
-    DEVICE = "cuda"
+    DEVICE = "cpu"
     hparams = {}
 
-    tb_logger = loggers.TensorBoardLogger(
+    # logger = loggers.TensorBoardLogger(
+    #     save_dir=".logs",
+    #     name=".checkpoints",
+    # )
+
+    logger = loggers.WandbLogger(
         save_dir=".logs",
-        name=".checkpoints",
+        project="document-rectification",
     )
-    # tb_logger.log_hyperparams(hparams)
+    # logger.log_hyperparams(hparams)
 
     model = GeometricTransformModel(res_w=20, res_h=20)
     model = model.to(DEVICE)
     datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8)
 
     trainer = pl.Trainer(
-        gpus=1,
-        logger=[tb_logger],
+        gpus=None,
+        logger=[logger],
         log_every_n_steps=1,
         flush_logs_every_n_steps=3,
         max_epochs=100,

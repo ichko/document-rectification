@@ -102,7 +102,7 @@ def get_augmentor():
     return augmentor
 
 
-def get_augmented_dl(path, bs, shuffle, device="cuda"):
+def get_augmented_dl(path, bs, shuffle, device="cpu"):
     dl = get_dl(path, bs=bs, shuffle=shuffle)
     augmentor = get_augmentor()
 
@@ -150,11 +150,11 @@ def main():
     dm = get_datamodule(train_bs=32, val_bs=32, plot_bs=16)
     dl = dm.train_dataloader()
 
-    i = 0
-    for _ in range(100):
-        for b in dl:
-            print(i)
-            i += 1
+    # i = 0
+    # for _ in range(100):
+    #     for b in dl:
+    #         print(i)
+    #         i += 1
 
     batch = next(iter(dl))
     batch["x"].ez.grid(nr=4).imshow(figsize=(8, 8))
