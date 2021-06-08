@@ -127,21 +127,23 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
     return map_dl(mapper, cache_dl(dl))
 
 
-def get_datamodule(train_bs, val_bs, plot_bs):
+def get_datamodule(train_bs, val_bs, plot_bs, device="cpu"):
     TRAIN_PATH = ".data/dataset/training_data/"
     TEST_PATH = ".data/dataset/testing_data/"
 
     class DataModule(pl.LightningDataModule):
         def plot_dl(self):
-            dl = get_augmented_dl(TRAIN_PATH, bs=plot_bs, shuffle=False)
+            dl = get_augmented_dl(TRAIN_PATH, bs=plot_bs, shuffle=False, device=device)
             example_batch = next(iter(dl))
             return [example_batch]
 
         def train_dataloader(self):
-            return get_augmented_dl(TRAIN_PATH, bs=train_bs, shuffle=True)
+            return get_augmented_dl(
+                TRAIN_PATH, bs=train_bs, shuffle=True, device=device
+            )
 
         def val_dataloader(self):
-            return get_augmented_dl(TEST_PATH, bs=val_bs, shuffle=False)
+            return get_augmented_dl(TEST_PATH, bs=val_bs, shuffle=False, device=device)
 
     return DataModule()
 

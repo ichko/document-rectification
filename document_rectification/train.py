@@ -1,12 +1,16 @@
 import logging
 import os
+import sys
 from argparse import Namespace
+from typing import Any, Optional
 
 import pytorch_lightning as pl
 import torch
 import torchvision
+import wandb
 from ez_torch.models import SpatialUVOffsetTransformer
 from pytorch_lightning import loggers
+from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch.nn import functional as F
 
 from document_rectification import data
@@ -15,8 +19,9 @@ logger = logging.getLogger()
 
 
 class GeometricTransformModel(pl.LightningModule):
-    def __init__(self, res_w, res_h):
+    def __init__(self, res_w, res_h, datamodule):
         super().__init__()
+        self.datamodule = datamodule
         self.feature_extractor = torchvision.models.resnet50(pretrained=True)
         self.st = SpatialUVOffsetTransformer(
             i=1000,
@@ -44,9 +49,22 @@ class GeometricTransformModel(pl.LightningModule):
         self.log("loss", loss)
         return loss
 
+    def on_epoch_start(self) -> None:
+        for batch in self.datamodule.plot_dl():
+            x, y = batch["x"], batch["y"]
+            y_hat = self(x)
+            wandb_exp = self.logger.experiment[0]
+            wandb_exp.log({"y_hat": [wandb.Image(i) for i in y_hat]})
+
 
 def main():
-    DEVICE = "cpu"
+
+    is_debug = "--debug" in sys.argv
+
+    DEVICE = "cpu" if is_debug else "cuda"
+    if is_debug:
+        os.environ["WANDB_MODE"] = "offline"
+
     hparams = {}
 
     # logger = loggers.TensorBoardLogger(
@@ -60,12 +78,12 @@ def main():
     )
     # logger.log_hyperparams(hparams)
 
-    model = GeometricTransformModel(res_w=20, res_h=20)
+    datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8, device=DEVICE)
+    model = GeometricTransformModel(res_w=20, res_h=20, datamodule=datamodule)
     model = model.to(DEVICE)
-    datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8)
 
     trainer = pl.Trainer(
-        gpus=None,
+        gpus=1 if DEVICE == "cuda" else None,
         logger=[logger],
         log_every_n_steps=1,
         flush_logs_every_n_steps=3,
