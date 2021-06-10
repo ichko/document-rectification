@@ -4,12 +4,14 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torchvision
+from ez_torch.vis import Fig
 from kornia import augmentation
 from torch import nn
 from torchvision.datasets.folder import ImageFolder
 from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTensor
 
 
+# Move to eztorch
 def map_dl(mapper, dl):
     class DL:
         def __len__(self):
@@ -21,6 +23,7 @@ def map_dl(mapper, dl):
     return DL()
 
 
+# Move to eztorch
 def cache_dl(dl):
     buffer = []
 
@@ -40,6 +43,7 @@ def cache_dl(dl):
     return CachedDL()
 
 
+# Move to eztorch
 class ParamCompose(nn.Module):
     def __init__(self, functions):
         super().__init__()
@@ -115,9 +119,9 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
         bg = torch.ones_like(X, device=device)
         bg[:, 1] = 0
 
-        X = augmentor(X, params)
+        transformed_X = augmentor(X, params)
         mask = augmentor(mask, params)
-        transformed_X = X + bg * (1 - mask)
+        transformed_X = transformed_X + bg * (1 - mask)
 
         return {
             "x": transformed_X,
@@ -127,7 +131,7 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
     return map_dl(mapper, cache_dl(dl))
 
 
-def get_datamodule(train_bs, val_bs, plot_bs, device="cpu"):
+def get_datamodule(train_bs, val_bs, plot_bs, shuffle=True, device="cpu"):
     TRAIN_PATH = ".data/dataset/training_data/"
     TEST_PATH = ".data/dataset/testing_data/"
 
@@ -139,18 +143,20 @@ def get_datamodule(train_bs, val_bs, plot_bs, device="cpu"):
 
         def train_dataloader(self):
             return get_augmented_dl(
-                TRAIN_PATH, bs=train_bs, shuffle=True, device=device
+                TRAIN_PATH, bs=train_bs, shuffle=shuffle, device=device
             )
 
         def val_dataloader(self):
-            return get_augmented_dl(TEST_PATH, bs=val_bs, shuffle=False, device=device)
+            return get_augmented_dl(
+                TEST_PATH, bs=val_bs, shuffle=shuffle, device=device
+            )
 
     return DataModule()
 
 
 def main():
-    dm = get_datamodule(train_bs=32, val_bs=32, plot_bs=16)
-    dl = dm.train_dataloader()
+    dm = get_datamodule(train_bs=12, val_bs=32, plot_bs=16, shuffle=False)
+    dl = dm.plot_dl()
 
     # i = 0
     # for _ in range(100):
@@ -159,7 +165,15 @@ def main():
     #         i += 1
 
     batch = next(iter(dl))
-    batch["x"].ez.grid(nr=4).imshow(figsize=(8, 8))
+
+    fig = Fig(nr=1, nc=2, figsize=(15, 15))
+    fig[0].imshow(batch["x"].ez.grid(nr=2).channel_last)
+    fig[0].ax.set_title("Input")
+
+    fig[1].imshow(batch["y"].ez.grid(nr=2).channel_last)
+    fig[1].ax.set_title("Output")
+
+    plt.tight_layout()
     plt.show()
 
 
