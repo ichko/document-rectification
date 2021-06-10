@@ -4,18 +4,25 @@ import sys
 from argparse import Namespace
 from typing import Any, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torchvision
 import wandb
 from ez_torch.models import SpatialUVOffsetTransformer
+from ez_torch.vis import Fig
 from pytorch_lightning import loggers
-from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch.nn import functional as F
 
 from document_rectification import data
 
 logger = logging.getLogger()
+
+is_debug = "--debug" in sys.argv
+if is_debug:
+    os.environ["WANDB_MODE"] = "offline"
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class GeometricTransformModel(pl.LightningModule):
@@ -58,13 +65,6 @@ class GeometricTransformModel(pl.LightningModule):
 
 
 def main():
-
-    is_debug = "--debug" in sys.argv
-
-    DEVICE = "cpu" if is_debug else "cuda"
-    if is_debug:
-        os.environ["WANDB_MODE"] = "offline"
-
     hparams = {}
 
     # logger = loggers.TensorBoardLogger(
@@ -79,7 +79,7 @@ def main():
     # logger.log_hyperparams(hparams)
 
     datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8, device=DEVICE)
-    model = GeometricTransformModel(res_w=20, res_h=20, datamodule=datamodule)
+    model = GeometricTransformModel(res_w=2, res_h=2, datamodule=datamodule)
     model = model.to(DEVICE)
 
     trainer = pl.Trainer(
@@ -92,5 +92,23 @@ def main():
     trainer.fit(model, datamodule=datamodule)
 
 
+def sanity_check():
+    datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8)
+    dl = datamodule.plot_dl()
+    batch = next(iter(dl))
+    # TODO: Problem with slow plotting!
+    model = GeometricTransformModel(res_w=2, res_h=2, datamodule=datamodule).to(DEVICE)
+    fig = Fig(nr=1, nc=2, figsize=(15, 15))
+    fig[0].imshow(batch["x"].ez.grid(nr=2).channel_last.raw.detach().cpu())
+    fig[0].ax.set_title("Input")
+
+    fig[1].imshow(batch["y"].ez.grid(nr=2).channel_last.raw.detach().cpu())
+    fig[1].ax.set_title("Output")
+
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
+    sanity_check()
     main()

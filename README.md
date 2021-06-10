@@ -16,5 +16,6 @@ poetry run data
 ```bash
 poetry run train
 
-poetry run tensorboard --logdir .logs
+poetry run tb # or
+poetry run wandb
 ```

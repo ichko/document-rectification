@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "${file}",
             "args": ["--debug"],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

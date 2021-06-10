@@ -7,6 +7,10 @@ authors = ["Iliya Zhecev <iliya.zhechev@gmail.com>"]
 [tool.poetry.scripts]
 data = 'document_rectification.data:main'
 train = 'document_rectification.train:main'
+wandb = 'document_rectification.main:run_wandb_local'
+tb = 'document_rectification.main:run_tensorboard_server'
+
+train_check = 'document_rectification.train:sanity_check'
 
 [tool.poetry.dependencies]
 python = "^3.7"
