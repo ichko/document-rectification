@@ -68,7 +68,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "black"
-version = "21.5b2"
+version = "21.6b0"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
@@ -186,11 +186,11 @@ torchvision = "^0.9.1"
 type = "git"
 url = "https://github.com/ichko/ez-torch"
 reference = "master"
-resolved_reference = "e2d09dced7f46fcfd992b70c7a2e87e88a2c36d2"
+resolved_reference = "6d82f2c67a5b49d742bd7425a1645a8b7ec0a0d7"
 
 [[package]]
 name = "fsspec"
-version = "2021.6.0"
+version = "2021.5.0"
 description = "File-system specification"
 category = "main"
 optional = false
@@ -250,7 +250,7 @@ typing-extensions = {version = ">=3.7.4.0", markers = "python_version < \"3.8\""
 
 [[package]]
 name = "google-auth"
-version = "1.30.1"
+version = "1.31.0"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -263,7 +263,7 @@ rsa = {version = ">=3.1.4,<5", markers = "python_version >= \"3.6\""}
 six = ">=1.9.0"
 
 [package.extras]
-aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)"]
+aiohttp = ["requests (>=2.20.0,<3.0.0dev)", "aiohttp (>=3.6.2,<4.0.0dev)"]
 pyopenssl = ["pyopenssl (>=20.0.0)"]
 reauth = ["pyu2f (>=0.1.5)"]
 
@@ -480,7 +480,7 @@ test = ["pytest (>=2.7.3)", "pytest-cov", "coveralls", "futures", "pytest-benchm
 
 [[package]]
 name = "protobuf"
-version = "3.17.2"
+version = "3.17.3"
 description = "Protocol Buffers"
 category = "main"
 optional = false
@@ -579,14 +579,14 @@ six = ">=1.5"
 
 [[package]]
 name = "pytorch-lightning"
-version = "1.3.4"
+version = "1.3.5"
 description = "PyTorch Lightning is the lightweight PyTorch wrapper for ML researchers. Scale your models. Write less boilerplate."
 category = "main"
 optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
-fsspec = {version = ">=2021.4.0", extras = ["http"]}
+fsspec = {version = ">=2021.05.0,<2021.06.0 || >2021.06.0", extras = ["http"]}
 future = ">=0.17.1"
 numpy = ">=1.17.2"
 packaging = "*"
@@ -598,12 +598,12 @@ torchmetrics = ">=0.2.0"
 tqdm = ">=4.41.0"
 
 [package.extras]
-all = ["matplotlib (>3.1)", "horovod (>=0.21.2)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.11.1)", "neptune-client (>=0.4.109)", "comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "test-tube (>=0.7.5)", "wandb (>=0.8.21)", "coverage (>5.2.0)", "codecov (>=2.1)", "pytest (>=6.0)", "flake8 (>=3.6)", "check-manifest", "twine (==3.2)", "isort (>=5.6.4)", "mypy (>=0.720,<0.800)", "pre-commit (>=1.0)", "cloudpickle (>=1.3)", "scikit-learn (>0.22.1)", "scikit-image (>0.17.1)", "nltk (>=3.3)", "pandas", "torchvision (>=0.5)", "gym (>=0.17.0)", "ipython"]
-cpu = ["matplotlib (>3.1)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.11.1)", "neptune-client (>=0.4.109)", "comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "test-tube (>=0.7.5)", "wandb (>=0.8.21)", "coverage (>5.2.0)", "codecov (>=2.1)", "pytest (>=6.0)", "flake8 (>=3.6)", "check-manifest", "twine (==3.2)", "isort (>=5.6.4)", "mypy (>=0.720,<0.800)", "pre-commit (>=1.0)", "cloudpickle (>=1.3)", "scikit-learn (>0.22.1)", "scikit-image (>0.17.1)", "nltk (>=3.3)", "pandas", "torchvision (>=0.5)", "gym (>=0.17.0)", "ipython"]
-cpu-extra = ["matplotlib (>3.1)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.11.1)"]
-dev = ["matplotlib (>3.1)", "horovod (>=0.21.2)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.11.1)", "neptune-client (>=0.4.109)", "comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "test-tube (>=0.7.5)", "wandb (>=0.8.21)", "coverage (>5.2.0)", "codecov (>=2.1)", "pytest (>=6.0)", "flake8 (>=3.6)", "check-manifest", "twine (==3.2)", "isort (>=5.6.4)", "mypy (>=0.720,<0.800)", "pre-commit (>=1.0)", "cloudpickle (>=1.3)", "scikit-learn (>0.22.1)", "scikit-image (>0.17.1)", "nltk (>=3.3)", "pandas"]
+all = ["matplotlib (>3.1)", "horovod (>=0.21.2)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.13.1)", "neptune-client (>=0.4.109)", "comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "test-tube (>=0.7.5)", "wandb (>=0.8.21)", "coverage (>5.2.0)", "codecov (>=2.1)", "pytest (>=6.0)", "flake8 (>=3.6)", "check-manifest", "twine (==3.2)", "isort (>=5.6.4)", "mypy (>=0.720,<0.800)", "pre-commit (>=1.0)", "cloudpickle (>=1.3)", "scikit-learn (>0.22.1)", "scikit-image (>0.17.1)", "nltk (>=3.3)", "pandas", "torchvision (>=0.5)", "gym (>=0.17.0)", "ipython"]
+cpu = ["matplotlib (>3.1)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.13.1)", "neptune-client (>=0.4.109)", "comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "test-tube (>=0.7.5)", "wandb (>=0.8.21)", "coverage (>5.2.0)", "codecov (>=2.1)", "pytest (>=6.0)", "flake8 (>=3.6)", "check-manifest", "twine (==3.2)", "isort (>=5.6.4)", "mypy (>=0.720,<0.800)", "pre-commit (>=1.0)", "cloudpickle (>=1.3)", "scikit-learn (>0.22.1)", "scikit-image (>0.17.1)", "nltk (>=3.3)", "pandas", "torchvision (>=0.5)", "gym (>=0.17.0)", "ipython"]
+cpu-extra = ["matplotlib (>3.1)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.13.1)"]
+dev = ["matplotlib (>3.1)", "horovod (>=0.21.2)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.13.1)", "neptune-client (>=0.4.109)", "comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "test-tube (>=0.7.5)", "wandb (>=0.8.21)", "coverage (>5.2.0)", "codecov (>=2.1)", "pytest (>=6.0)", "flake8 (>=3.6)", "check-manifest", "twine (==3.2)", "isort (>=5.6.4)", "mypy (>=0.720,<0.800)", "pre-commit (>=1.0)", "cloudpickle (>=1.3)", "scikit-learn (>0.22.1)", "scikit-image (>0.17.1)", "nltk (>=3.3)", "pandas"]
 examples = ["torchvision (>=0.5)", "gym (>=0.17.0)", "ipython"]
-extra = ["matplotlib (>3.1)", "horovod (>=0.21.2)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.11.1)"]
+extra = ["matplotlib (>3.1)", "horovod (>=0.21.2)", "omegaconf (>=2.0.1)", "torchtext (>=0.5)", "onnxruntime (>=1.3.0)", "hydra-core (>=1.0)", "jsonargparse[signatures] (>=3.13.1)"]
 loggers = ["neptune-client (>=0.4.109)", "comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "test-tube (>=0.7.5)", "wandb (>=0.8.21)"]
 test = ["coverage (>5.2.0)", "codecov (>=2.1)", "pytest (>=6.0)", "flake8 (>=3.6)", "check-manifest", "twine (==3.2)", "isort (>=5.6.4)", "mypy (>=0.720,<0.800)", "pre-commit (>=1.0)", "cloudpickle (>=1.3)", "scikit-learn (>0.22.1)", "scikit-image (>0.17.1)", "nltk (>=3.3)", "pandas"]
 
@@ -835,7 +835,7 @@ python-versions = "*"
 
 [[package]]
 name = "urllib3"
-version = "1.26.5"
+version = "1.25.11"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "main"
 optional = false
@@ -848,14 +848,14 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
 name = "wandb"
-version = "0.10.31"
+version = "0.10.32"
 description = "A CLI and library for interacting with the Weights and Biases API."
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.dependencies]
-Click = ">=7.0"
+Click = ">=7.0,<8.0.0 || >8.0.0"
 configparser = ">=3.8.1"
 docker-pycreds = ">=0.4.0"
 GitPython = ">=1.0.0"
@@ -870,6 +870,7 @@ sentry-sdk = ">=0.4.0"
 shortuuid = ">=0.5.0"
 six = ">=1.13.0"
 subprocess32 = ">=3.5.3"
+urllib3 = {version = "<=1.25.11", markers = "sys_platform == \"win32\" or sys_platform == \"cygwin\""}
 
 [package.extras]
 aws = ["boto3"]
@@ -989,8 +990,8 @@ attrs = [
     {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
 ]
 black = [
-    {file = "black-21.5b2-py3-none-any.whl", hash = "sha256:e5cf21ebdffc7a9b29d73912b6a6a9a4df4ce70220d523c21647da2eae0751ef"},
-    {file = "black-21.5b2.tar.gz", hash = "sha256:1fc0e0a2c8ae7d269dfcf0c60a89afa299664f3e811395d40b1922dff8f854b5"},
+    {file = "black-21.6b0-py3-none-any.whl", hash = "sha256:dfb8c5a069012b2ab1e972e7b908f5fb42b6bbabcba0a788b86dc05067c7d9c7"},
+    {file = "black-21.6b0.tar.gz", hash = "sha256:dc132348a88d103016726fe360cb9ede02cecf99b76e3660ce6c596be132ce04"},
 ]
 cachetools = [
     {file = "cachetools-4.2.2-py3-none-any.whl", hash = "sha256:2cc0b89715337ab6dbba85b5b50effe2b0c74e035d83ee8ed637cf52f12ae001"},
@@ -1026,8 +1027,8 @@ docker-pycreds = [
 ]
 ez-torch = []
 fsspec = [
-    {file = "fsspec-2021.6.0-py3-none-any.whl", hash = "sha256:e926b66c074ff3fc732d7678187a294e4a0bf112ccb51594fa9dff5a9fbdc4a1"},
-    {file = "fsspec-2021.6.0.tar.gz", hash = "sha256:931961514c67acab86519ca16985491e639ebf992dbc3a1aae24d44202b52426"},
+    {file = "fsspec-2021.5.0-py3-none-any.whl", hash = "sha256:a08daa28ecb98544350d62f8307a7678e410c4b5245e04d14fcf4a3f13e959a7"},
+    {file = "fsspec-2021.5.0.tar.gz", hash = "sha256:30064d89b00c6acfe5d8e027b6c0ef3df25ca17fd1d5cad2e8208c9aa5300f8d"},
 ]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
@@ -1041,8 +1042,8 @@ gitpython = [
     {file = "GitPython-3.1.17.tar.gz", hash = "sha256:ee24bdc93dce357630764db659edaf6b8d664d4ff5447ccfeedd2dc5c253f41e"},
 ]
 google-auth = [
-    {file = "google-auth-1.30.1.tar.gz", hash = "sha256:044d81b1e58012f8ebc71cc134e191c1fa312f543f1fbc99973afe28c25e3228"},
-    {file = "google_auth-1.30.1-py2.py3-none-any.whl", hash = "sha256:b3ca7a8ff9ab3bdefee3ad5aefb11fc6485423767eee016f5942d8e606ca23fb"},
+    {file = "google-auth-1.31.0.tar.gz", hash = "sha256:154f7889c5d679a6f626f36adb12afbd4dbb0a9a04ec575d989d6ba79c4fd65e"},
+    {file = "google_auth-1.31.0-py2.py3-none-any.whl", hash = "sha256:6d47c79b5d09fbc7e8355fd9594cc4cf65fdde5d401c63951eaac4baa1ba2ae1"},
 ]
 google-auth-oauthlib = [
     {file = "google-auth-oauthlib-0.4.4.tar.gz", hash = "sha256:09832c6e75032f93818edf1affe4746121d640c625a5bef9b5c96af676e98eee"},
@@ -1293,6 +1294,7 @@ pillow = [
     {file = "Pillow-8.2.0-pp37-pypy37_pp73-manylinux2010_i686.whl", hash = "sha256:aac00e4bc94d1b7813fe882c28990c1bc2f9d0e1aa765a5f2b516e8a6a16a9e4"},
     {file = "Pillow-8.2.0-pp37-pypy37_pp73-manylinux2010_x86_64.whl", hash = "sha256:22fd0f42ad15dfdde6c581347eaa4adb9a6fc4b865f90b23378aa7914895e120"},
     {file = "Pillow-8.2.0-pp37-pypy37_pp73-win32.whl", hash = "sha256:e98eca29a05913e82177b3ba3d198b1728e164869c613d76d0de4bde6768a50e"},
+    {file = "Pillow-8.2.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:8b56553c0345ad6dcb2e9b433ae47d67f95fc23fe28a0bde15a120f25257e291"},
     {file = "Pillow-8.2.0.tar.gz", hash = "sha256:a787ab10d7bb5494e5f76536ac460741788f1fbce851068d73a87ca7c35fc3e1"},
 ]
 pluggy = [
@@ -1303,29 +1305,29 @@ promise = [
     {file = "promise-2.3.tar.gz", hash = "sha256:dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0"},
 ]
 protobuf = [
-    {file = "protobuf-3.17.2-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:c49e673436e24e925022c090a98905cfe88d056cb5dde67a8e20ae339acd8140"},
-    {file = "protobuf-3.17.2-cp27-cp27mu-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:4e62be28dcaab52c7e8e8e3fb9a7005dec6374e698f3b22d79276d95c13151e5"},
-    {file = "protobuf-3.17.2-cp35-cp35m-macosx_10_9_intel.whl", hash = "sha256:c2038dec269b65683f16057886c09ca7526471793029bdd43259282e1e0fb668"},
-    {file = "protobuf-3.17.2-cp35-cp35m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:b667ddbb77ff619fdbd18be75445d4448ee68493c9bddd1b4d0b177025e2f6f6"},
-    {file = "protobuf-3.17.2-cp35-cp35m-win32.whl", hash = "sha256:993814b0199f22523a227696a8e20d2cd4b9cda60c76d2fb3969ce0c77eb9e0f"},
-    {file = "protobuf-3.17.2-cp35-cp35m-win_amd64.whl", hash = "sha256:38b2c6e2204731cfebdb2452ffb7addf0367172b35cff8ccda338ccea9e7c87a"},
-    {file = "protobuf-3.17.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:42239d47f213f1ce12ddca62c0c70856efbac09797d715e5d606b3fbc3f16c44"},
-    {file = "protobuf-3.17.2-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:4da073b6c1a83e4ff1294156844f21343c5094e295c194d8ecc94703c7a6f42a"},
-    {file = "protobuf-3.17.2-cp36-cp36m-win32.whl", hash = "sha256:c303ce92c60d069237cfbd41790fde3d00066ca9500fac464454e20c2f12250c"},
-    {file = "protobuf-3.17.2-cp36-cp36m-win_amd64.whl", hash = "sha256:751d71dc6559dd794d309811d8dcf179d6a128b38a1655ae7137530f33895cb4"},
-    {file = "protobuf-3.17.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:f3f057ad59cd4d5ea2b1bb88d36c6f009b8043007cf03d96cbd3b9c06859d4fa"},
-    {file = "protobuf-3.17.2-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:c5b512c1982f8b427a302db094cf79f8f235284014d01b23fba461aa2c1459a0"},
-    {file = "protobuf-3.17.2-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:9dc01ddc3b195c4538942790c4b195cf17b52d3785a60c1f6f25b794f51e2071"},
-    {file = "protobuf-3.17.2-cp37-cp37m-win32.whl", hash = "sha256:45cc0197e9f9192693c8a4dbcba8c9227a53a2720fc3826dfe791113d9ff5e5e"},
-    {file = "protobuf-3.17.2-cp37-cp37m-win_amd64.whl", hash = "sha256:816fe5e8b73c29adb13a57e1653da15f24cbb90e86ea92e6f08abe6d8c0cbdb4"},
-    {file = "protobuf-3.17.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:557e16884d7276caf92c1fb188fe6dfbec47891d3507d4982db1e3d89ffd22de"},
-    {file = "protobuf-3.17.2-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:89613ec119fdcad992f65d7a5bfe3170c17edc839982d0089fc0c9242fb8e517"},
-    {file = "protobuf-3.17.2-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:744f5c9a3b9e7538c4c70f2b0e46f86858b684f5d17bf78643a19a6c21c7936f"},
-    {file = "protobuf-3.17.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:1e08da38d56b74962d9cb05d86ca5f25d2e5b78f05fd00db7900cad3faa6de00"},
-    {file = "protobuf-3.17.2-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:6388e7f300010ea7ac77113c7491c5622645d2447fdf701cbfe026b832d728cd"},
-    {file = "protobuf-3.17.2-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:0b5a73fa43efda0df0191c162680ec40cef45463fa8ff69fbeaeeddda4c760f5"},
-    {file = "protobuf-3.17.2-py2.py3-none-any.whl", hash = "sha256:50c657a54592c1bec7b24521fdbbbd2f7b51325ba23ab505ed03e8ebf3a5aeff"},
-    {file = "protobuf-3.17.2.tar.gz", hash = "sha256:5a3450acf046716e4a4f02a3f7adfb7b86f1b5b3ae392cec759915e79538d40d"},
+    {file = "protobuf-3.17.3-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:ab6bb0e270c6c58e7ff4345b3a803cc59dbee19ddf77a4719c5b635f1d547aa8"},
+    {file = "protobuf-3.17.3-cp27-cp27mu-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:13ee7be3c2d9a5d2b42a1030976f760f28755fcf5863c55b1460fd205e6cd637"},
+    {file = "protobuf-3.17.3-cp35-cp35m-macosx_10_9_intel.whl", hash = "sha256:1556a1049ccec58c7855a78d27e5c6e70e95103b32de9142bae0576e9200a1b0"},
+    {file = "protobuf-3.17.3-cp35-cp35m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:f0e59430ee953184a703a324b8ec52f571c6c4259d496a19d1cabcdc19dabc62"},
+    {file = "protobuf-3.17.3-cp35-cp35m-win32.whl", hash = "sha256:a981222367fb4210a10a929ad5983ae93bd5a050a0824fc35d6371c07b78caf6"},
+    {file = "protobuf-3.17.3-cp35-cp35m-win_amd64.whl", hash = "sha256:6d847c59963c03fd7a0cd7c488cadfa10cda4fff34d8bc8cba92935a91b7a037"},
+    {file = "protobuf-3.17.3-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:145ce0af55c4259ca74993ddab3479c78af064002ec8227beb3d944405123c71"},
+    {file = "protobuf-3.17.3-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:6ce4d8bf0321e7b2d4395e253f8002a1a5ffbcfd7bcc0a6ba46712c07d47d0b4"},
+    {file = "protobuf-3.17.3-cp36-cp36m-win32.whl", hash = "sha256:7a4c97961e9e5b03a56f9a6c82742ed55375c4a25f2692b625d4087d02ed31b9"},
+    {file = "protobuf-3.17.3-cp36-cp36m-win_amd64.whl", hash = "sha256:a22b3a0dbac6544dacbafd4c5f6a29e389a50e3b193e2c70dae6bbf7930f651d"},
+    {file = "protobuf-3.17.3-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:ffea251f5cd3c0b9b43c7a7a912777e0bc86263436a87c2555242a348817221b"},
+    {file = "protobuf-3.17.3-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:9b7a5c1022e0fa0dbde7fd03682d07d14624ad870ae52054849d8960f04bc764"},
+    {file = "protobuf-3.17.3-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:8727ee027157516e2c311f218ebf2260a18088ffb2d29473e82add217d196b1c"},
+    {file = "protobuf-3.17.3-cp37-cp37m-win32.whl", hash = "sha256:14c1c9377a7ffbeaccd4722ab0aa900091f52b516ad89c4b0c3bb0a4af903ba5"},
+    {file = "protobuf-3.17.3-cp37-cp37m-win_amd64.whl", hash = "sha256:c56c050a947186ba51de4f94ab441d7f04fcd44c56df6e922369cc2e1a92d683"},
+    {file = "protobuf-3.17.3-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:2ae692bb6d1992afb6b74348e7bb648a75bb0d3565a3f5eea5bec8f62bd06d87"},
+    {file = "protobuf-3.17.3-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:99938f2a2d7ca6563c0ade0c5ca8982264c484fdecf418bd68e880a7ab5730b1"},
+    {file = "protobuf-3.17.3-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:6902a1e4b7a319ec611a7345ff81b6b004b36b0d2196ce7a748b3493da3d226d"},
+    {file = "protobuf-3.17.3-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:4ffbd23640bb7403574f7aff8368e2aeb2ec9a5c6306580be48ac59a6bac8bde"},
+    {file = "protobuf-3.17.3-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:26010f693b675ff5a1d0e1bdb17689b8b716a18709113288fead438703d45539"},
+    {file = "protobuf-3.17.3-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:e76d9686e088fece2450dbc7ee905f9be904e427341d289acbe9ad00b78ebd47"},
+    {file = "protobuf-3.17.3-py2.py3-none-any.whl", hash = "sha256:2bfb815216a9cd9faec52b16fd2bfa68437a44b67c56bee59bc3926522ecb04e"},
+    {file = "protobuf-3.17.3.tar.gz", hash = "sha256:72804ea5eaa9c22a090d2803813e280fb273b62d5ae497aaf3553d141c4fdd7b"},
 ]
 psutil = [
     {file = "psutil-5.8.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:0066a82f7b1b37d334e68697faba68e5ad5e858279fd6351c8ca6024e8d6ba64"},
@@ -1408,8 +1410,8 @@ python-dateutil = [
     {file = "python_dateutil-2.8.1-py2.py3-none-any.whl", hash = "sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"},
 ]
 pytorch-lightning = [
-    {file = "pytorch-lightning-1.3.4.tar.gz", hash = "sha256:360229919631bbf7755444700c1e6db94f331bb111dbcc6d4160551c46c9619a"},
-    {file = "pytorch_lightning-1.3.4-py3-none-any.whl", hash = "sha256:d15b3180361d9860eacd465baf7eb64637d0f7c9a674dc764afbf60d85bc10e5"},
+    {file = "pytorch-lightning-1.3.5.tar.gz", hash = "sha256:6c1bd16b69f8dd927edaaa200ddbf64858a02f25f5a02c4186b12df8d99be652"},
+    {file = "pytorch_lightning-1.3.5-py3-none-any.whl", hash = "sha256:83bb51bff099e147467c3cb0c410a32232fefe745363d2b460ad0d60f5aff8f8"},
 ]
 pyyaml = [
     {file = "PyYAML-5.4.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:3b2b1824fe7112845700f815ff6a489360226a5609b96ec2190a45e62a9fc922"},
@@ -1611,12 +1613,12 @@ typing-extensions = [
     {file = "typing_extensions-3.10.0.0.tar.gz", hash = "sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342"},
 ]
 urllib3 = [
-    {file = "urllib3-1.26.5-py2.py3-none-any.whl", hash = "sha256:753a0374df26658f99d826cfe40394a686d05985786d946fbe4165b5148f5a7c"},
-    {file = "urllib3-1.26.5.tar.gz", hash = "sha256:a7acd0977125325f516bda9735fa7142b909a8d01e8b2e4c8108d0984e6e0098"},
+    {file = "urllib3-1.25.11-py2.py3-none-any.whl", hash = "sha256:f5321fbe4bf3fefa0efd0bfe7fb14e90909eb62a48ccda331726b4319897dd5e"},
+    {file = "urllib3-1.25.11.tar.gz", hash = "sha256:8d7eaa5a82a1cac232164990f04874c594c9453ec55eef02eab885aa02fc17a2"},
 ]
 wandb = [
-    {file = "wandb-0.10.31-py2.py3-none-any.whl", hash = "sha256:7a52bf0c853130f65be106c32bea4f4b56bda66c0151b4d1234c08467a403269"},
-    {file = "wandb-0.10.31.tar.gz", hash = "sha256:da706a93b02966085f1849798d7eeb4dc8fb96830b4cfe50099aa514bd57a188"},
+    {file = "wandb-0.10.32-py2.py3-none-any.whl", hash = "sha256:7cb1a278b01ef48e4fd848d6bf5bf699499583432e0e3d919faa83084ddbb28e"},
+    {file = "wandb-0.10.32.tar.gz", hash = "sha256:c03c82e2fdb222dd7eac6515d5493d9b8536f3918197acf7e60d4f4154f4a19b"},
 ]
 wcwidth = [
     {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
