@@ -55,7 +55,7 @@ class GeometricTransformModel(pl.LightningModule):
         return loss
 
     def on_epoch_start(self) -> None:
-        for batch in self.datamodule.plot_dl():
+        for batch in self.datamodule.plot_dataloader():
             x, y = batch["x"], batch["y"]
             y_hat = self(x)
             wandb_exp = self.logger.experiment[0]
@@ -91,20 +91,36 @@ def main():
 
 
 def sanity_check():
-    datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8, shuffle=False)
-    dl = datamodule.plot_dl()
+    datamodule = data.get_datamodule(
+        train_bs=16,
+        val_bs=16,
+        plot_bs=8,
+        shuffle=False,
+        device=DEVICE,
+    )
+    dl = datamodule.plot_dataloader()
     batch = next(iter(dl))
-    # TODO: Problem with slow plotting!
+
     model = GeometricTransformModel(res_w=2, res_h=2, datamodule=datamodule).to(DEVICE)
-    fig = Fig(nr=1, nc=2, figsize=(15, 15))
-    fig[0].imshow(batch["x"].ez.grid(nr=2).channel_last.raw.detach().cpu())
+    predictions = model(batch["x"])
+
+    fig = Fig(nr=1, nc=3, figsize=(15, 10))
+
+    im = batch["x"].ez.grid(nr=2).channel_last.np
+    fig[0].imshow(im)
     fig[0].ax.set_title("Input")
 
-    fig[1].imshow(batch["y"].ez.grid(nr=2).channel_last.raw.detach().cpu())
-    fig[1].ax.set_title("Output")
+    im = predictions.ez.grid(nr=2).channel_last.np
+    fig[1].imshow(im)
+    fig[1].ax.set_title("Prediction")
+
+    im = batch["y"].ez.grid(nr=2).channel_last.np
+    fig[2].imshow(im)
+    fig[2].ax.set_title("GT")
 
     plt.tight_layout()
     plt.show()
+    # plt.savefig("a.png")
 
 
 if __name__ == "__main__":

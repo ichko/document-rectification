@@ -148,10 +148,10 @@ def get_datamodule(
     else:
         logger.info("Downloading dataset...")
         os.popen(
-            "poetry run kaggle d download sharmaharsh/form-understanding-noisy-scanned-documentsfunsd -p .data"
+            f"poetry run kaggle d download sharmaharsh/form-understanding-noisy-scanned-documentsfunsd -p {data_folder}"
         ).read()
         os.system(
-            "unzip .data/form-understanding-noisy-scanned-documentsfunsd.zip -d .data"
+            f"unzip {data_folder}/form-understanding-noisy-scanned-documentsfunsd.zip -d {data_folder}"
         )
 
     class DataModule(pl.LightningDataModule):
