@@ -155,9 +155,17 @@ def get_datamodule(
         )
 
     class DataModule(pl.LightningDataModule):
-        def plot_dl(self):
+        def plot_dataloader(self):
             dl = get_augmented_dl(TRAIN_PATH, bs=plot_bs, shuffle=False, device=device)
             example_batch = next(iter(dl))
+            """
+            WARNING: If here I `return [example_batch]` Fig construction will be VERY slow.
+                     Specifically plt.subplots (not sure why). It goes from 3s to 23s?!?
+                     If you change plot_dataloader -> train_dataloader, the bug goes away.
+
+                     matplotlib#6664 - <https://github.com/matplotlib/matplotlib/issues/6664>
+                     Might contain relevant information, but I could not find it.
+            """
             return [example_batch]
 
         def train_dataloader(self):
@@ -175,21 +183,16 @@ def get_datamodule(
 
 def main():
     dm = get_datamodule(train_bs=12, val_bs=32, plot_bs=16, shuffle=False)
-    dl = dm.plot_dl()
-
-    # i = 0
-    # for _ in range(100):
-    #     for b in dl:
-    #         print(i)
-    #         i += 1
-
+    dl = dm.plot_dataloader()
     batch = next(iter(dl))
 
-    fig = Fig(nr=1, nc=2, figsize=(15, 15))
-    fig[0].imshow(batch["x"].ez.grid(nr=2).channel_last)
+    fig = Fig(nr=1, nc=2, figsize=(5, 5))
+    im = batch["x"].ez.grid(nr=2).channel_last
+    fig[0].imshow(im)
     fig[0].ax.set_title("Input")
 
-    fig[1].imshow(batch["y"].ez.grid(nr=2).channel_last)
+    im = batch["y"].ez.grid(nr=2).channel_last
+    fig[1].imshow(im)
     fig[1].ax.set_title("Output")
 
     plt.tight_layout()
