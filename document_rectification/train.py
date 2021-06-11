@@ -1,8 +1,6 @@
 import logging
 import os
 import sys
-from argparse import Namespace
-from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
@@ -93,7 +91,7 @@ def main():
 
 
 def sanity_check():
-    datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8)
+    datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8, shuffle=False)
     dl = datamodule.plot_dl()
     batch = next(iter(dl))
     # TODO: Problem with slow plotting!

@@ -1,11 +1,8 @@
-import ez_torch
 import kornia
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
-import torchvision
 from ez_torch.vis import Fig
-from kornia import augmentation
 from torch import nn
 from torchvision.datasets.folder import ImageFolder
 from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTensor
