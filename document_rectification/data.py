@@ -1,3 +1,5 @@
+import os
+
 import kornia
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
@@ -6,6 +8,8 @@ from ez_torch.vis import Fig
 from torch import nn
 from torchvision.datasets.folder import ImageFolder
 from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTensor
+
+from document_rectification.common import logger
 
 
 # Move to eztorch
@@ -128,9 +132,27 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
     return map_dl(mapper, cache_dl(dl))
 
 
-def get_datamodule(train_bs, val_bs, plot_bs, shuffle=True, device="cpu"):
-    TRAIN_PATH = ".data/dataset/training_data/"
-    TEST_PATH = ".data/dataset/testing_data/"
+def get_datamodule(
+    train_bs, val_bs, plot_bs, shuffle=True, device="cpu", force_download=False
+):
+    data_folder = ".data"
+    TRAIN_PATH = f"{data_folder}/dataset/training_data/"
+    TEST_PATH = f"{data_folder}/dataset/testing_data/"
+
+    if (
+        os.path.exists(data_folder)
+        and len(os.listdir(data_folder)) > 0
+        and not force_download
+    ):
+        logger.info("Dataset already download. Use force_download=True to redownload.")
+    else:
+        logger.info("Downloading dataset...")
+        os.popen(
+            "poetry run kaggle d download sharmaharsh/form-understanding-noisy-scanned-documentsfunsd -p .data"
+        ).read()
+        os.system(
+            "unzip .data/form-understanding-noisy-scanned-documentsfunsd.zip -d .data"
+        )
 
     class DataModule(pl.LightningDataModule):
         def plot_dl(self):
