@@ -166,7 +166,7 @@ def get_datamodule(
                      matplotlib#6664 - <https://github.com/matplotlib/matplotlib/issues/6664>
                      Might contain relevant information, but I could not find it.
             """
-            return [example_batch]
+            yield example_batch
 
         def train_dataloader(self):
             return get_augmented_dl(
