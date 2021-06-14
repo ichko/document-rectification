@@ -23,6 +23,9 @@ ez-torch = {git = "https://github.com/ichko/ez-torch", rev = "master"}
 tensorboard = "2.2"
 wandb = "^0.10.31"
 kaggle = "^1.5.12"
+seaborn = "^0.11.1"
+ipykernel = "^5.5.5"
+jupyter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
