@@ -5,12 +5,16 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from ez_torch.vis import Fig
+from kornia.augmentation.augmentation import RandomAffine, RandomPerspective
 from torch import nn
 from torchvision.datasets.folder import ImageFolder
 from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTensor
 
 from document_rectification.common import logger
 
+scale = 0.5
+H, W = 1000, 760
+H, W = int(H * scale), int(W * scale)
 
 # Move to eztorch
 def map_dl(mapper, dl):
@@ -72,9 +76,6 @@ class ParamCompose(nn.Module):
 
 
 def get_dl(path, bs, shuffle):
-    scale = 0.5
-    H, W = 1000, 762
-    H, W = int(H * scale), int(W * scale)
     ds = ImageFolder(
         path,
         transform=Compose(
@@ -95,13 +96,13 @@ def get_dl(path, bs, shuffle):
 def get_augmentor():
     augmentor = ParamCompose(
         [
-            kornia.augmentation.RandomAffine(
+            RandomAffine(
                 degrees=15,
                 translate=[0.1, 0.1],
                 scale=[0.9, 1.1],
                 shear=[-10, 10],
             ),
-            kornia.augmentation.RandomPerspective(0.6, p=0.9),
+            RandomPerspective(0.6, p=0.9),
         ]
     ).eval()
     return augmentor
@@ -155,6 +156,9 @@ def get_datamodule(
         )
 
     class DataModule(pl.LightningDataModule):
+        H = H
+        W = W
+
         def plot_dataloader(self):
             dl = get_augmented_dl(TRAIN_PATH, bs=plot_bs, shuffle=False, device=device)
             example_batch = next(iter(dl))
