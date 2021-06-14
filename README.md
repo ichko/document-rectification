@@ -22,3 +22,9 @@ poetry run tb_server
 
 poetry run train
 ```
+
+**To run `jupyter` notebook add custom poetry kernel add custom kernel.**
+[SRC - Add Jupyter kernel with poetry](https://docs.pymedphys.com/contrib/other/add-jupyter-kernel.html)
+```bash
+poetry run python -m ipykernel install --user --name document-rectification-kernel
+```
