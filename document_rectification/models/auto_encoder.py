@@ -9,12 +9,11 @@ from pytorch_lightning.core import datamodule
 from torch import nn
 from torch.functional import Tensor
 
-H, W = 50, 38
-
 
 class Encoder(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, size):
         super().__init__()
+        H, W = size
         self.net = torchvision.models.mobilenet.mobilenet_v2(
             pretrained=False,
             progress=True,
@@ -56,10 +55,13 @@ class Decoder(pl.LightningModule):
 
 
 class AutoEncoder(pl.LightningModule):
-    def __init__(self, decoder_kwargs):
+    def __init__(self, image_channels, size):
         super().__init__()
-        self.encoder = Encoder()
-        self.decoder = Decoder(**decoder_kwargs)
+        self.encoder = Encoder(size=size)
+        self.decoder = Decoder(
+            image_channels=image_channels,
+            size=size,
+        )
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.encoder(x)
@@ -82,10 +84,8 @@ def sanity_check():
     batch = next(iter(dl))
 
     ae = AutoEncoder(
-        decoder_kwargs=dict(
-            image_channels=3,
-            size=size,
-        )
+        image_channels=3,
+        size=size,
     ).to(device)
     ae.summarize()
 
