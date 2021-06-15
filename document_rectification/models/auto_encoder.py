@@ -1,8 +1,9 @@
 from typing import Any
 
 import pytorch_lightning as pl
-import torch
+import torch.nn.functional as F
 import torchvision
+from document_rectification.common import DEVICE
 from document_rectification.data import get_datamodule
 from ez_torch.models import Reshape
 from pytorch_lightning.core import datamodule
@@ -11,9 +12,9 @@ from torch.functional import Tensor
 
 
 class Encoder(pl.LightningModule):
-    def __init__(self, size):
+    def __init__(self, image_size):
         super().__init__()
-        H, W = size
+        H, W = image_size
         self.net = torchvision.models.mobilenet.mobilenet_v2(
             pretrained=False,
             progress=True,
@@ -25,9 +26,9 @@ class Encoder(pl.LightningModule):
 
 
 class Decoder(pl.LightningModule):
-    def __init__(self, image_channels, size):
+    def __init__(self, image_channels, image_size):
         super().__init__()
-        H, W = size
+        H, W = image_size
         self.net = nn.Sequential(
             Reshape(-1, 1, H, W),
             nn.Upsample(scale_factor=2),
@@ -55,12 +56,12 @@ class Decoder(pl.LightningModule):
 
 
 class AutoEncoder(pl.LightningModule):
-    def __init__(self, image_channels, size):
+    def __init__(self, image_channels, image_size):
         super().__init__()
-        self.encoder = Encoder(size=size)
+        self.encoder = Encoder(image_size=image_size)
         self.decoder = Decoder(
             image_channels=image_channels,
-            size=size,
+            image_size=image_size,
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -68,16 +69,18 @@ class AutoEncoder(pl.LightningModule):
         x = self.decoder(x)
         return x
 
+    def criterion(self, y_hat, y):
+        y = y.mean(dim=1, keepdim=True)
+        return F.binary_cross_entropy(y_hat, y)
+
 
 def sanity_check():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
     dm = get_datamodule(
         train_bs=12,
         val_bs=32,
         plot_bs=16,
         shuffle=False,
-        device=device,
+        device=DEVICE,
     )
     size = [dm.H // 10, dm.W // 10]
     dl = dm.plot_dataloader()
@@ -85,8 +88,8 @@ def sanity_check():
 
     ae = AutoEncoder(
         image_channels=3,
-        size=size,
-    ).to(device)
+        image_size=size,
+    ).to(DEVICE)
     ae.summarize()
 
     y_hat = ae.encoder(batch["x"])
