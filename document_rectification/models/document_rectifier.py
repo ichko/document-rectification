@@ -34,6 +34,11 @@ class DocumentRectifier(pl.LightningModule):
         x = self.ae(x)
         return x
 
+    def info_forward(self, x: Tensor) -> Tensor:
+        geom_out = self.geom_transform(x)
+        ae_out = self.ae(geom_out)
+        return {"geom_out": geom_out, "ae_out": ae_out}
+
     def criterion(self, y_hat, y):
         y = y.mean(dim=1, keepdim=True)
         return F.binary_cross_entropy(y_hat, y)

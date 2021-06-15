@@ -65,21 +65,25 @@ def sanity_check():
         transform_res_h=5,
         datamodule=dm,
     ).to(DEVICE)
-    predictions = model(batch["x"])
+    info = model.info_forward(batch["x"])
 
-    fig = Fig(nr=1, nc=3, figsize=(15, 10))
+    fig = Fig(nr=1, nc=4, figsize=(15, 10))
 
     im = batch["x"].ez.grid(nr=2).channel_last.np
     fig[0].imshow(im)
     fig[0].ax.set_title("Input")
 
-    im = predictions.ez.grid(nr=2).channel_last.np
+    im = info["geom_out"].ez.grid(nr=2).channel_last.np
     fig[1].imshow(im)
-    fig[1].ax.set_title("Prediction")
+    fig[1].ax.set_title("Geom Out")
+
+    im = info["ae_out"].ez.grid(nr=2).channel_last.np
+    fig[2].imshow(im)
+    fig[2].ax.set_title("AE Out")
 
     im = batch["y"].ez.grid(nr=2).channel_last.np
-    fig[2].imshow(im)
-    fig[2].ax.set_title("GT")
+    fig[3].imshow(im)
+    fig[3].ax.set_title("GT")
 
     plt.tight_layout()
     plt.show()
