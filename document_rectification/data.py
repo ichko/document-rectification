@@ -1,9 +1,9 @@
 import os
 
-import kornia
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
+from ez_torch.data import CachedDataset, MapDataset, ParamCompose
 from ez_torch.vis import Fig
 from kornia.augmentation.augmentation import RandomAffine, RandomPerspective
 from torch import nn
@@ -15,64 +15,6 @@ from document_rectification.common import logger
 scale = 0.5
 H, W = 1000, 760
 H, W = int(H * scale), int(W * scale)
-
-# Move to eztorch
-def map_dl(mapper, dl):
-    class DL:
-        def __len__(self):
-            return len(dl)
-
-        def __iter__(self):
-            return (mapper(b, i) for i, b in enumerate(dl))
-
-    return DL()
-
-
-# Move to eztorch
-def cache_dl(dl):
-    buffer = []
-
-    class CachedDL:
-        def __len__(self):
-            return len(dl)
-
-        def __iter__(self):
-            if len(buffer) > 0:
-                for b in buffer:
-                    yield b
-            else:
-                for b in dl:
-                    buffer.append(b)
-                    yield b
-
-    return CachedDL()
-
-
-# Move to eztorch
-class ParamCompose(nn.Module):
-    def __init__(self, functions):
-        super().__init__()
-        self.functions = nn.ModuleList(functions)
-
-    def forward(self, inp, params=None):
-        if params is None:
-            params = [None] * len(self.functions)
-
-        for f, p in zip(self.functions, params):
-            inp = f(inp, p)
-
-        return inp
-
-    def forward_parameters(self, shape, device="cpu"):
-        params = []
-        for f in self.functions:
-            p = f.forward_parameters(shape)
-            pp = {}
-            for k, v in p.items():
-                pp[k] = v.to(device)
-            params.append(pp)
-
-        return params
 
 
 def get_dl(path, bs, shuffle):
@@ -130,10 +72,12 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
             "y": X,
         }
 
-    return map_dl(mapper, cache_dl(dl))
+    return MapDataset(mapper, CachedDataset(dl))
 
 
 class DocumentsDataModule(pl.LightningDataModule):
+    H = H
+    W = W
     image_size = (H, W)
 
     def __init__(
