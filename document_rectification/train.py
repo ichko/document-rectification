@@ -1,65 +1,15 @@
 import logging
-import os
-import sys
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
-import torchvision
-import wandb
-from ez_torch.models import SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
 from pytorch_lightning import loggers
-from torch.nn import functional as F
 
-from document_rectification import data
+from document_rectification.common import DEVICE
+from document_rectification.data import DocumentsDataModule
+from document_rectification.models.document_rectifier import DocumentRectifier
 
 logger = logging.getLogger()
-
-is_debug = "--debug" in sys.argv
-if is_debug:
-    os.environ["WANDB_MODE"] = "offline"
-
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
-
-class GeometricTransformModel(pl.LightningModule):
-    def __init__(self, res_w, res_h, datamodule):
-        super().__init__()
-        self.datamodule = datamodule
-        self.feature_extractor = torchvision.models.resnet50(pretrained=True)
-        self.st = SpatialUVOffsetTransformer(
-            i=1000,
-            uv_resolution_shape=(res_w, res_h),
-        )
-
-    def forward(self, x):
-        self.features = self.feature_extractor(x)
-        x = x.mean(dim=1, keepdim=True)
-        y_hat = self.st([self.features, x])
-        return y_hat
-
-    def criterion(self, y_hat, y):
-        y = y.mean(dim=1, keepdim=True)
-        return F.binary_cross_entropy(y_hat, y)
-
-    def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-8)
-
-    def training_step(self, batch, _batch_index):
-        x, y = batch["x"], batch["y"]
-        y_hat = self(x)
-        loss = self.criterion(y_hat, y)
-
-        self.log("loss", loss)
-        return loss
-
-    def on_epoch_start(self) -> None:
-        for batch in self.datamodule.plot_dataloader():
-            x, y = batch["x"], batch["y"]
-            y_hat = self(x)
-            wandb_exp = self.logger.experiment[0]
-            wandb_exp.log({"y_hat": [wandb.Image(i) for i in y_hat]})
 
 
 def main():
@@ -76,8 +26,13 @@ def main():
     )
     # logger.log_hyperparams(hparams)
 
-    datamodule = data.get_datamodule(train_bs=16, val_bs=16, plot_bs=8, device=DEVICE)
-    model = GeometricTransformModel(res_w=2, res_h=2, datamodule=datamodule)
+    datamodule = DocumentsDataModule(
+        train_bs=16,
+        val_bs=16,
+        plot_bs=8,
+        device=DEVICE,
+    )
+    model = DocumentRectifier(res_w=2, res_h=2, datamodule=datamodule)
     model = model.to(DEVICE)
 
     trainer = pl.Trainer(
@@ -91,7 +46,7 @@ def main():
 
 
 def sanity_check():
-    datamodule = data.get_datamodule(
+    datamodule = DocumentsDataModule(
         train_bs=16,
         val_bs=16,
         plot_bs=8,
@@ -101,7 +56,10 @@ def sanity_check():
     dl = datamodule.plot_dataloader()
     batch = next(iter(dl))
 
-    model = GeometricTransformModel(res_w=2, res_h=2, datamodule=datamodule).to(DEVICE)
+    image_size = datamodule.W
+    model = DocumentRectifier(
+        image_channels=3, image_size=image_size, res_w=2, res_h=2, datamodule=datamodule
+    ).to(DEVICE)
     predictions = model(batch["x"])
 
     fig = Fig(nr=1, nc=3, figsize=(15, 10))
