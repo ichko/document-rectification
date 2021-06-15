@@ -46,19 +46,24 @@ def main():
 
 
 def sanity_check():
-    datamodule = DocumentsDataModule(
+    dm = DocumentsDataModule(
         train_bs=16,
         val_bs=16,
         plot_bs=8,
         shuffle=False,
         device=DEVICE,
     )
-    dl = datamodule.plot_dataloader()
+    dl = dm.plot_dataloader()
     batch = next(iter(dl))
 
-    image_size = datamodule.W
+    image_size = dm.H, dm.W
     model = DocumentRectifier(
-        image_channels=3, image_size=image_size, res_w=2, res_h=2, datamodule=datamodule
+        image_channels=3,
+        ae_latent_size=50 * 38,
+        ae_decoder_initial_reshape=[50, 38],
+        transform_res_w=5,
+        transform_res_h=5,
+        datamodule=dm,
     ).to(DEVICE)
     predictions = model(batch["x"])
 
@@ -83,4 +88,4 @@ def sanity_check():
 
 if __name__ == "__main__":
     sanity_check()
-    main()
+    # main()
