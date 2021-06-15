@@ -1,5 +1,8 @@
 import logging
+import os
 import sys
+
+import torch
 
 
 def get_logger():
@@ -17,3 +20,9 @@ def get_logger():
 
 
 logger = get_logger()
+
+is_debug = "--debug" in sys.argv
+if is_debug:
+    os.environ["WANDB_MODE"] = "offline"
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
