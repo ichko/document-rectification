@@ -1,13 +1,15 @@
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import wandb
 from document_rectification.models.auto_encoder import AutoEncoder
 from document_rectification.models.geometric_transformer import GeometricTransformModel
+from ez_torch.vis import Fig
 from torch.functional import Tensor
 
 
-class DocumentRectifier(pl.LightningModule):
+class DocumentRectifierLTModule(pl.LightningModule):
     def __init__(
         self,
         image_channels,
@@ -18,6 +20,8 @@ class DocumentRectifier(pl.LightningModule):
         datamodule,
     ):
         super().__init__()
+
+        self.plot_dl = datamodule.plot_dataloader()
         self.geom_transform = GeometricTransformModel(
             res_w=transform_res_w,
             res_h=transform_res_h,
@@ -41,6 +45,7 @@ class DocumentRectifier(pl.LightningModule):
 
     def criterion(self, y_hat, y):
         y = y.mean(dim=1, keepdim=True)
+        y_hat = y_hat.mean(dim=1, keepdim=True)
         return F.binary_cross_entropy(y_hat, y)
 
     def configure_optimizers(self):
@@ -54,9 +59,31 @@ class DocumentRectifier(pl.LightningModule):
         self.log("loss", loss)
         return loss
 
-    def on_epoch_start(self) -> None:
-        for batch in self.datamodule.plot_dataloader():
-            x, y = batch["x"], batch["y"]
-            y_hat = self(x)
-            wandb_exp = self.logger.experiment[0]
-            wandb_exp.log({"y_hat": [wandb.Image(i) for i in y_hat]})
+    def on_epoch_start(self):
+        with torch.no_grad():
+            self.eval()
+            # TODO: This logs only on the first call
+            for batch in self.plot_dl:
+                info = self.info_forward(batch["x"])
+
+                fig = Fig(nr=1, nc=4, figsize=(15, 10))
+
+                im = batch["x"].ez.grid(nr=2).channel_last.np
+                fig[0].imshow(im)
+                fig[0].ax.set_title("Input")
+
+                im = info["geom_out"].ez.grid(nr=2).channel_last.np
+                fig[1].imshow(im)
+                fig[1].ax.set_title("Geom Out")
+
+                im = info["ae_out"].ez.grid(nr=2).channel_last.np
+                fig[2].imshow(im)
+                fig[2].ax.set_title("AE Out")
+
+                im = batch["y"].ez.grid(nr=2).channel_last.np
+                fig[3].imshow(im)
+                fig[3].ax.set_title("GT")
+
+                plt.tight_layout()
+                wandb.log({"chart": plt})
+                plt.close()

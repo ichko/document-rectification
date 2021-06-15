@@ -7,7 +7,7 @@ from pytorch_lightning import loggers
 
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
-from document_rectification.models.document_rectifier import DocumentRectifier
+from document_rectification.models.document_rectifier import DocumentRectifierLTModule
 
 logger = logging.getLogger()
 
@@ -26,14 +26,21 @@ def main():
     )
     # logger.log_hyperparams(hparams)
 
-    datamodule = DocumentsDataModule(
-        train_bs=16,
-        val_bs=16,
+    dm = DocumentsDataModule(
+        train_bs=8,
+        val_bs=8,
         plot_bs=8,
+        shuffle=True,
         device=DEVICE,
     )
-    model = DocumentRectifier(res_w=2, res_h=2, datamodule=datamodule)
-    model = model.to(DEVICE)
+    model = DocumentRectifierLTModule(
+        image_channels=3,
+        ae_latent_size=50 * 38,
+        ae_decoder_initial_reshape=[50, 38],
+        transform_res_w=5,
+        transform_res_h=5,
+        datamodule=dm,
+    ).to(DEVICE)
 
     trainer = pl.Trainer(
         gpus=1 if DEVICE == "cuda" else None,
@@ -42,7 +49,7 @@ def main():
         flush_logs_every_n_steps=3,
         max_epochs=100,
     )
-    trainer.fit(model, datamodule=datamodule)
+    trainer.fit(model, datamodule=dm)
 
 
 def sanity_check():
@@ -56,8 +63,7 @@ def sanity_check():
     dl = dm.plot_dataloader()
     batch = next(iter(dl))
 
-    image_size = dm.H, dm.W
-    model = DocumentRectifier(
+    model = DocumentRectifierLTModule(
         image_channels=3,
         ae_latent_size=50 * 38,
         ae_decoder_initial_reshape=[50, 38],
@@ -91,5 +97,5 @@ def sanity_check():
 
 
 if __name__ == "__main__":
-    sanity_check()
-    # main()
+    # sanity_check()
+    main()
