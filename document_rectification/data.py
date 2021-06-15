@@ -133,60 +133,81 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
     return map_dl(mapper, cache_dl(dl))
 
 
-def get_datamodule(
-    train_bs, val_bs, plot_bs, shuffle=True, device="cpu", force_download=False
-):
-    data_folder = ".data"
-    TRAIN_PATH = f"{data_folder}/dataset/training_data/"
-    TEST_PATH = f"{data_folder}/dataset/testing_data/"
+class DocumentsDataModule(pl.LightningDataModule):
+    image_size = (H, W)
 
-    if (
-        os.path.exists(data_folder)
-        and len(os.listdir(data_folder)) > 0
-        and not force_download
+    def __init__(
+        self,
+        train_bs,
+        val_bs,
+        plot_bs,
+        shuffle=True,
+        device="cpu",
+        force_download=False,
     ):
-        logger.info("Dataset already download. Use force_download=True to redownload.")
-    else:
-        logger.info("Downloading dataset...")
-        os.popen(
-            f"poetry run kaggle d download sharmaharsh/form-understanding-noisy-scanned-documentsfunsd -p {data_folder}"
-        ).read()
-        os.system(
-            f"unzip {data_folder}/form-understanding-noisy-scanned-documentsfunsd.zip -d {data_folder}"
+        super().__init__()
+
+        self.shuffle = shuffle
+        self.plot_bs = plot_bs
+        self.val_bs = val_bs
+        self.train_bs = train_bs
+        self.device = device
+
+        data_folder = ".data"
+        self.TRAIN_PATH = f"{data_folder}/dataset/training_data/"
+        self.TEST_PATH = f"{data_folder}/dataset/testing_data/"
+
+        if (
+            os.path.exists(data_folder)
+            and len(os.listdir(data_folder)) > 0
+            and not force_download
+        ):
+            logger.info(
+                "Dataset already download. Use force_download=True to redownload."
+            )
+        else:
+            logger.info("Downloading dataset...")
+            os.popen(
+                f"poetry run kaggle d download sharmaharsh/form-understanding-noisy-scanned-documentsfunsd -p {data_folder}"
+            ).read()
+            os.system(
+                f"unzip {data_folder}/form-understanding-noisy-scanned-documentsfunsd.zip -d {data_folder}"
+            )
+
+    def plot_dataloader(self):
+        dl = get_augmented_dl(
+            self.TRAIN_PATH, bs=self.plot_bs, shuffle=False, device=self.device
+        )
+        example_batch = next(iter(dl))
+        """
+        WARNING: If here I `return [example_batch]` Fig construction will be VERY slow.
+                    Specifically plt.subplots (not sure why). It goes from 3s to 23s?!?
+                    If you change plot_dataloader -> train_dataloader, the bug goes away.
+
+                    matplotlib#6664 - <https://github.com/matplotlib/matplotlib/issues/6664>
+                    Might contain relevant information, but I could not find it.
+        """
+        yield example_batch
+
+    def train_dataloader(self):
+        return get_augmented_dl(
+            self.TRAIN_PATH,
+            bs=self.train_bs,
+            shuffle=self.shuffle,
+            device=self.device,
         )
 
-    class DataModule(pl.LightningDataModule):
-        H = H
-        W = W
-
-        def plot_dataloader(self):
-            dl = get_augmented_dl(TRAIN_PATH, bs=plot_bs, shuffle=False, device=device)
-            example_batch = next(iter(dl))
-            """
-            WARNING: If here I `return [example_batch]` Fig construction will be VERY slow.
-                     Specifically plt.subplots (not sure why). It goes from 3s to 23s?!?
-                     If you change plot_dataloader -> train_dataloader, the bug goes away.
-
-                     matplotlib#6664 - <https://github.com/matplotlib/matplotlib/issues/6664>
-                     Might contain relevant information, but I could not find it.
-            """
-            yield example_batch
-
-        def train_dataloader(self):
-            return get_augmented_dl(
-                TRAIN_PATH, bs=train_bs, shuffle=shuffle, device=device
-            )
-
-        def val_dataloader(self):
-            return get_augmented_dl(
-                TEST_PATH, bs=val_bs, shuffle=shuffle, device=device
-            )
-
-    return DataModule()
+    def val_dataloader(self):
+        return get_augmented_dl(
+            self.TEST_PATH,
+            bs=self.val_bs,
+            shuffle=self.shuffle,
+            device=self.device,
+        )
 
 
 def main():
-    dm = get_datamodule(train_bs=12, val_bs=32, plot_bs=16, shuffle=False)
+    dm = DocumentsDataModule(train_bs=12, val_bs=32, plot_bs=16, shuffle=False)
     dl = dm.plot_dataloader()
     batch = next(iter(dl))
 

@@ -4,14 +4,14 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 import torchvision
 from document_rectification.common import DEVICE
-from document_rectification.data import get_datamodule
+from document_rectification.data import DocumentsDataModule
 from ez_torch.models import Reshape
 from pytorch_lightning.core import datamodule
 from torch import nn
 from torch.functional import Tensor
 
 
-class Encoder(pl.LightningModule):
+class Encoder(nn.Module):
     def __init__(self, image_size):
         super().__init__()
         H, W = image_size
@@ -25,7 +25,7 @@ class Encoder(pl.LightningModule):
         return self.net(x)
 
 
-class Decoder(pl.LightningModule):
+class Decoder(nn.Module):
     def __init__(self, image_channels, image_size):
         super().__init__()
         H, W = image_size
@@ -75,20 +75,20 @@ class AutoEncoder(pl.LightningModule):
 
 
 def sanity_check():
-    dm = get_datamodule(
+    dm = DocumentsDataModule(
         train_bs=12,
         val_bs=32,
         plot_bs=16,
         shuffle=False,
         device=DEVICE,
     )
-    size = [dm.H // 10, dm.W // 10]
+    image_size = [dm.H // 10, dm.W // 10]
     dl = dm.plot_dataloader()
     batch = next(iter(dl))
 
     ae = AutoEncoder(
         image_channels=3,
-        image_size=size,
+        image_size=image_size,
     ).to(DEVICE)
     ae.summarize()
 

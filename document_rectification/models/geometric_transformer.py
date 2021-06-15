@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import torchvision
 import wandb
 from document_rectification.common import DEVICE
-from document_rectification.data import get_datamodule
+from document_rectification.data import DocumentsDataModule
 from ez_torch.models import SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
 
@@ -32,7 +32,7 @@ class GeometricTransformModel(pl.LightningModule):
 
 
 def sanity_check():
-    datamodule = get_datamodule(
+    datamodule = DocumentsDataModule(
         train_bs=8,
         val_bs=8,
         plot_bs=8,
