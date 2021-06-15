@@ -9,7 +9,13 @@ from torch.functional import Tensor
 
 class DocumentRectifier(pl.LightningModule):
     def __init__(
-        self, image_channels, image_size, transform_res_w, transform_res_h, datamodule
+        self,
+        image_channels,
+        ae_latent_size,
+        ae_decoder_initial_reshape,
+        transform_res_w,
+        transform_res_h,
+        datamodule,
     ):
         super().__init__()
         self.geom_transform = GeometricTransformModel(
@@ -19,7 +25,8 @@ class DocumentRectifier(pl.LightningModule):
         )
         self.ae = AutoEncoder(
             image_channels=image_channels,
-            image_size=image_size,
+            latent_size=ae_latent_size,
+            decoder_initial_reshape=ae_decoder_initial_reshape,
         )
 
     def forward(self, x: Tensor) -> Tensor:

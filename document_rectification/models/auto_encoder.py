@@ -12,25 +12,28 @@ from torch.functional import Tensor
 
 
 class Encoder(nn.Module):
-    def __init__(self, image_size):
+    def __init__(self, latent_size):
         super().__init__()
-        H, W = image_size
         self.net = torchvision.models.mobilenet.mobilenet_v2(
             pretrained=False,
             progress=True,
-            num_classes=H * W,
+            num_classes=latent_size,
         )
 
     def forward(self, x: Tensor) -> Tensor:
+        channel_dim = 1
+        if x.size(channel_dim) == 1:
+            repeats = [1] * x.ndim
+            repeats[channel_dim] = 3
+            x = x.repeat(*repeats)
         return self.net(x)
 
 
 class Decoder(nn.Module):
-    def __init__(self, image_channels, image_size):
+    def __init__(self, image_channels, initial_reshape):
         super().__init__()
-        H, W = image_size
         self.net = nn.Sequential(
-            Reshape(-1, 1, H, W),
+            Reshape(-1, 1, *initial_reshape),
             nn.Upsample(scale_factor=2),
             nn.Conv2d(1, 128, 3, stride=1, padding=1),
             nn.BatchNorm2d(128, 0.8),
@@ -56,12 +59,12 @@ class Decoder(nn.Module):
 
 
 class AutoEncoder(pl.LightningModule):
-    def __init__(self, image_channels, image_size):
+    def __init__(self, image_channels, latent_size, decoder_initial_reshape):
         super().__init__()
-        self.encoder = Encoder(image_size=image_size)
+        self.encoder = Encoder(latent_size=latent_size)
         self.decoder = Decoder(
             image_channels=image_channels,
-            image_size=image_size,
+            initial_reshape=decoder_initial_reshape,
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -88,7 +91,8 @@ def sanity_check():
 
     ae = AutoEncoder(
         image_channels=3,
-        image_size=image_size,
+        latent_size=image_size[0] * image_size[1],
+        decoder_initial_reshape=image_size,
     ).to(DEVICE)
     ae.summarize()
 
