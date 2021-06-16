@@ -5,8 +5,7 @@ import torch.nn.functional as F
 import torchvision
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
-from ez_torch.models import Reshape
-from pytorch_lightning.core import datamodule
+from ez_torch.models import Lambda, Reshape
 from torch import nn
 from torch.functional import Tensor
 
@@ -50,8 +49,9 @@ class Decoder(nn.Module):
             nn.Conv2d(64, 64, 3, stride=1, padding=1),
             nn.BatchNorm2d(64, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(64, image_channels, 3, stride=1, padding=1),
+            nn.Conv2d(64, 1, 3, stride=1, padding=1),
             nn.Sigmoid(),
+            Lambda(lambda x: x.repeat(1, image_channels, 1, 1)),  # make 3 channel image
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -73,7 +73,7 @@ class AutoEncoder(pl.LightningModule):
         return x
 
     def criterion(self, y_hat, y):
-        y = y.mean(dim=1, keepdim=True)
+        y = y.mean(dim=1, keepdim=True).repeat(1, 3, 1, 1)
         return F.binary_cross_entropy(y_hat, y)
 
 
