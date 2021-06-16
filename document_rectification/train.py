@@ -1,4 +1,5 @@
 import logging
+from argparse import Namespace
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
@@ -7,24 +8,21 @@ from pytorch_lightning import loggers
 
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
-from document_rectification.models.document_rectifier import DocumentRectifierLTModule
+from document_rectification.models.document_ae_rectifier import DocumentAERectifier
 
 logger = logging.getLogger()
 
 
 def main():
-    hparams = {}
-
-    # logger = loggers.TensorBoardLogger(
-    #     save_dir=".logs",
-    #     name=".checkpoints",
-    # )
+    hparams = Namespace(
+        lr=1e-4,
+    )
 
     logger = loggers.WandbLogger(
         save_dir=".logs",
         project="document-rectification",
     )
-    # logger.log_hyperparams(hparams)
+    logger.log_hyperparams(hparams)
 
     dm = DocumentsDataModule(
         train_bs=8,
@@ -33,13 +31,14 @@ def main():
         shuffle=True,
         device=DEVICE,
     )
-    model = DocumentRectifierLTModule(
+    model = DocumentAERectifier(
         image_channels=3,
         ae_latent_size=50 * 38,
         ae_decoder_initial_reshape=[50, 38],
         transform_res_w=5,
         transform_res_h=5,
-        datamodule=dm,
+        plot_dataloader=dm.plot_dataloader(),
+        hparams=hparams,
     ).to(DEVICE)
 
     trainer = pl.Trainer(
@@ -63,7 +62,7 @@ def sanity_check():
     dl = dm.plot_dataloader()
     batch = next(iter(dl))
 
-    model = DocumentRectifierLTModule(
+    model = DocumentAERectifier(
         image_channels=3,
         ae_latent_size=50 * 38,
         ae_decoder_initial_reshape=[50, 38],
