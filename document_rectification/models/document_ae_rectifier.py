@@ -50,6 +50,8 @@ class DocumentAERectifier(pl.LightningModule):
         return F.binary_cross_entropy(y_hat, y)
 
     def configure_optimizers(self):
+        # TODO: Set lr for geom_transformer to something smaller
+        # schedule it to increase?
         return torch.optim.Adam(self.parameters(), lr=self.hp.lr)
 
     def training_step(self, batch, _batch_index):

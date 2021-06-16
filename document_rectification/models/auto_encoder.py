@@ -68,6 +68,8 @@ class AutoEncoder(pl.LightningModule):
         )
 
     def forward(self, x: Tensor) -> Tensor:
+        # TODO: Feed image in grayscale form?
+        # (maybe not - the background may be easily separable in fullcolor)
         x = self.encoder(x)
         x = self.decoder(x)
         return x
