@@ -124,14 +124,20 @@ class DocumentsDataModule(pl.LightningDataModule):
         )
         example_batch = next(iter(dl))
         """
+        (June 15th)
         WARNING: If here I `return [example_batch]` Fig construction will be VERY slow.
-                    Specifically plt.subplots (not sure why). It goes from 3s to 23s?!?
-                    If you change plot_dataloader -> train_dataloader, the bug goes away.
+                 Specifically plt.subplots (not sure why). It goes from 3s to 23s?!?
+                 If you change plot_dataloader -> train_dataloader, the bug goes away.
 
-                    matplotlib#6664 - <https://github.com/matplotlib/matplotlib/issues/6664>
-                    Might contain relevant information, but I could not find it.
+                 matplotlib#6664 - <https://github.com/matplotlib/matplotlib/issues/6664>
+                 Might contain relevant information, but I could not find it.
+
+        (June 16th)
+                 This seems to have been fixed by itself. I replaced it with `return [example_batch]`
+                 and it works. Not sure why. It might have been related to some caching bug in poetry
+                 while updating the ez_torch package.
         """
-        yield example_batch
+        return [example_batch]
 
     def train_dataloader(self):
         return get_augmented_dl(
