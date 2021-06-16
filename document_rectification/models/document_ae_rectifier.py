@@ -9,7 +9,7 @@ from ez_torch.vis import Fig
 from torch.functional import Tensor
 
 
-class DocumentRectifierLTModule(pl.LightningModule):
+class DocumentAERectifier(pl.LightningModule):
     def __init__(
         self,
         image_channels,
@@ -17,15 +17,16 @@ class DocumentRectifierLTModule(pl.LightningModule):
         ae_decoder_initial_reshape,
         transform_res_w,
         transform_res_h,
-        datamodule,
+        plot_dataloader,
+        hparams,
     ):
         super().__init__()
 
-        self.plot_dl = datamodule.plot_dataloader()
+        self.hparams = hparams
+        self.plot_dataloader = plot_dataloader
         self.geom_transform = GeometricTransformModel(
             res_w=transform_res_w,
             res_h=transform_res_h,
-            datamodule=datamodule,
         )
         self.ae = AutoEncoder(
             image_channels=image_channels,
@@ -49,9 +50,10 @@ class DocumentRectifierLTModule(pl.LightningModule):
         return F.binary_cross_entropy(y_hat, y)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-5)
+        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
     def training_step(self, batch, _batch_index):
+        self.train()
         x, y = batch["x"], batch["y"]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
@@ -63,7 +65,7 @@ class DocumentRectifierLTModule(pl.LightningModule):
         with torch.no_grad():
             self.eval()
             # TODO: This logs only on the first call
-            for batch in self.plot_dl:
+            for batch in self.plot_dataloader:
                 info = self.info_forward(batch["x"])
 
                 fig = Fig(nr=1, nc=4, figsize=(15, 10))
@@ -86,4 +88,3 @@ class DocumentRectifierLTModule(pl.LightningModule):
 
                 plt.tight_layout()
                 wandb.log({"chart": plt})
-                plt.close()
