@@ -8,13 +8,13 @@ from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
 from ez_torch.models import SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
-from torchvision.models.mobilenetv2 import MobileNetV2
+from torchvision.models.mobilenetv2 import mobilenet_v2
 
 
 class GeometricTransformModel(pl.LightningModule):
     def __init__(self, res_w, res_h):
         super().__init__()
-        self.feature_extractor = MobileNetV2(
+        self.feature_extractor = mobilenet_v2(
             pretrained=True,
             num_classes=1000,
         )
@@ -27,6 +27,7 @@ class GeometricTransformModel(pl.LightningModule):
         self.features = self.feature_extractor(x)
         x = x.mean(dim=1, keepdim=True)
         y_hat = self.st([self.features, x])
+        y_hat = y_hat.repeat(1, 3, 1, 1)
         return y_hat
 
     def criterion(self, y_hat, y):

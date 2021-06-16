@@ -22,7 +22,7 @@ class DocumentAERectifier(pl.LightningModule):
     ):
         super().__init__()
 
-        self.hparams = hparams
+        self.hp = hparams
         self.plot_dataloader = plot_dataloader
         self.geom_transform = GeometricTransformModel(
             res_w=transform_res_w,
@@ -50,15 +50,22 @@ class DocumentAERectifier(pl.LightningModule):
         return F.binary_cross_entropy(y_hat, y)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
+        return torch.optim.Adam(self.parameters(), lr=self.hp.lr)
 
     def training_step(self, batch, _batch_index):
         self.train()
         x, y = batch["x"], batch["y"]
         y_hat = self(x)
-        loss = self.criterion(y_hat, y)
+
+        ae_y_hat = self.ae(batch["y"])
+        id_recon_loss = self.ae.criterion(ae_y_hat, batch["y"])
+        geom_recon_loss = self.criterion(y_hat, y)
+        loss = (geom_recon_loss + id_recon_loss) / 2
 
         self.log("loss", loss)
+        self.log("geom_recon_loss", geom_recon_loss)
+        self.log("id_recon_loss", id_recon_loss)
+
         return loss
 
     def on_epoch_start(self):
