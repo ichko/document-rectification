@@ -25,7 +25,7 @@ def main():
     logger.log_hyperparams(hparams)
 
     dm = DocumentsDataModule(
-        train_bs=8,
+        train_bs=6,
         val_bs=8,
         plot_bs=8,
         shuffle=True,

@@ -72,7 +72,7 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
             "y": X,
         }
 
-    return MapDataset(mapper, CachedDataset(dl))
+    return MapDataset(mapper, CachedDataset(dl, shuffle=True))
 
 
 class DocumentsDataModule(pl.LightningDataModule):
