@@ -8,13 +8,16 @@ from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
 from ez_torch.models import SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
+from torchvision.models.mobilenetv2 import MobileNetV2
 
 
 class GeometricTransformModel(pl.LightningModule):
-    def __init__(self, res_w, res_h, datamodule):
+    def __init__(self, res_w, res_h):
         super().__init__()
-        self.datamodule = datamodule
-        self.feature_extractor = torchvision.models.resnet50(pretrained=True)
+        self.feature_extractor = MobileNetV2(
+            pretrained=True,
+            num_classes=1000,
+        )
         self.st = SpatialUVOffsetTransformer(
             i=1000,
             uv_resolution_shape=(res_w, res_h),
