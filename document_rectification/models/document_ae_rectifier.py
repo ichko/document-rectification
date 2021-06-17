@@ -52,9 +52,17 @@ class DocumentAERectifier(pl.LightningModule):
         return F.binary_cross_entropy(y_hat, y)
 
     def configure_optimizers(self):
-        geom_opt = torch.optim.Adam(self.geom_transform.parameters(), lr=1e-8)
-        ae_opt = torch.optim.Adam(self.ae.parameters(), lr=1e-4)
+        geom_opt = torch.optim.Adam(
+            [
+                {"params": self.ae.parameters(), "lr": 1e-8},
+                {"params": self.geom_transform.parameters(), "lr": 1e-6},
+            ]
+        )
+        ae_opt = torch.optim.Adam(self.ae.parameters(), lr=1e-3)
         return geom_opt, ae_opt
+
+    def validation_step(self, batch, _batch_index):
+        pass  # skip for now
 
     def training_step(self, batch, _batch_index):
         self.train()
@@ -65,15 +73,18 @@ class DocumentAERectifier(pl.LightningModule):
         ae_loss = self.ae.criterion(ae_y_hat, batch["y"])
 
         geom_y_hat = self.geom_transform(batch["x"])
-        geom_recon_loss = self.geom_transform.criterion(geom_y_hat, y)
+        geom_ae_y_hat = self.ae(geom_y_hat)
+        geom_recon_loss = self.geom_transform.criterion(geom_ae_y_hat, y)
         loss = (geom_recon_loss + ae_loss) / 2
 
+        # The order of these operations is important
         geom_opt.zero_grad()
-        self.manual_backward(geom_recon_loss)
-        geom_opt.step()
-
         ae_opt.zero_grad()
+
+        self.manual_backward(geom_recon_loss)
         self.manual_backward(ae_loss)
+
+        geom_opt.step()
         ae_opt.step()
 
         self.log("loss", loss)
@@ -109,3 +120,4 @@ class DocumentAERectifier(pl.LightningModule):
 
                 plt.tight_layout()
                 wandb.log({"chart": plt})
+                plt.close()

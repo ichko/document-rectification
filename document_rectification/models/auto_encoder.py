@@ -75,7 +75,6 @@ class AutoEncoder(pl.LightningModule):
         return x
 
     def criterion(self, y_hat, y):
-        y = y.mean(dim=1, keepdim=True).repeat(1, 3, 1, 1)
         return F.binary_cross_entropy(y_hat, y)
 
 
