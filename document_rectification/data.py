@@ -39,10 +39,10 @@ def get_augmentor():
     augmentor = ParamCompose(
         [
             RandomAffine(
-                degrees=15,
-                translate=[0.1, 0.1],
-                scale=[0.9, 1.1],
-                shear=[-10, 10],
+                degrees=1,
+                translate=[0.01, 0.01],
+                scale=[0.8, 0.9],
+                shear=[-1, 1],
             ),
             RandomPerspective(0.6, p=0.9),
         ]
@@ -70,6 +70,7 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
         return {
             "x": transformed_X,
             "y": X,
+            "mask": mask,
         }
 
     return MapDataset(mapper, CachedDataset(dl, shuffle=True))
@@ -161,12 +162,12 @@ def main():
     dl = dm.plot_dataloader()
     batch = next(iter(dl))
 
-    fig = Fig(nr=1, nc=2, figsize=(5, 5))
-    im = batch["x"].ez.grid(nr=2).channel_last
+    fig = Fig(nr=1, nc=2, figsize=(15, 10))
+    im = batch["x"].ez.grid(nr=4).channel_last
     fig[0].imshow(im)
     fig[0].ax.set_title("Input")
 
-    im = batch["y"].ez.grid(nr=2).channel_last
+    im = batch["y"].ez.grid(nr=4).channel_last
     fig[1].imshow(im)
     fig[1].ax.set_title("Output")
 
