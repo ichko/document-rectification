@@ -46,7 +46,7 @@ def main():
         logger=[logger],
         log_every_n_steps=1,
         flush_logs_every_n_steps=3,
-        max_epochs=100,
+        max_epochs=1500,
     )
     trainer.fit(model, datamodule=dm)
 

@@ -34,6 +34,8 @@ class DocumentAERectifier(pl.LightningModule):
             decoder_initial_reshape=ae_decoder_initial_reshape,
         )
 
+        self.automatic_optimization = False
+
     def forward(self, x: Tensor) -> Tensor:
         x = self.geom_transform(x)
         x = self.ae(x)
@@ -50,23 +52,33 @@ class DocumentAERectifier(pl.LightningModule):
         return F.binary_cross_entropy(y_hat, y)
 
     def configure_optimizers(self):
-        # TODO: Set lr for geom_transformer to something smaller
-        # schedule it to increase?
-        return torch.optim.Adam(self.parameters(), lr=self.hp.lr)
+        geom_opt = torch.optim.Adam(self.geom_transform.parameters(), lr=1e-8)
+        ae_opt = torch.optim.Adam(self.ae.parameters(), lr=1e-4)
+        return geom_opt, ae_opt
 
     def training_step(self, batch, _batch_index):
         self.train()
+        geom_opt, ae_opt = self.optimizers()
         x, y = batch["x"], batch["y"]
-        y_hat = self(x)
 
         ae_y_hat = self.ae(batch["y"])
-        id_recon_loss = self.ae.criterion(ae_y_hat, batch["y"])
-        geom_recon_loss = self.criterion(y_hat, y)
-        loss = (geom_recon_loss + id_recon_loss) / 2
+        ae_loss = self.ae.criterion(ae_y_hat, batch["y"])
+
+        geom_y_hat = self.geom_transform(batch["x"])
+        geom_recon_loss = self.geom_transform.criterion(geom_y_hat, y)
+        loss = (geom_recon_loss + ae_loss) / 2
+
+        geom_opt.zero_grad()
+        self.manual_backward(geom_recon_loss)
+        geom_opt.step()
+
+        ae_opt.zero_grad()
+        self.manual_backward(ae_loss)
+        ae_opt.step()
 
         self.log("loss", loss)
         self.log("geom_recon_loss", geom_recon_loss)
-        self.log("id_recon_loss", id_recon_loss)
+        self.log("id_recon_loss", ae_loss)
 
         return loss
 

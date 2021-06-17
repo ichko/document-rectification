@@ -31,7 +31,6 @@ class GeometricTransformModel(pl.LightningModule):
         return y_hat
 
     def criterion(self, y_hat, y):
-        y = y.mean(dim=1, keepdim=True)
         return F.binary_cross_entropy(y_hat, y)
 
 
