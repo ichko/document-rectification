@@ -54,7 +54,7 @@ class DocumentAERectifier(pl.LightningModule):
     def configure_optimizers(self):
         geom_opt = torch.optim.Adam(
             [
-                {"params": self.ae.parameters(), "lr": 1e-8},
+                # {"params": self.ae.parameters(), "lr": 1e-8},
                 {"params": self.geom_transform.parameters(), "lr": 1e-6},
             ]
         )
@@ -73,8 +73,9 @@ class DocumentAERectifier(pl.LightningModule):
         ae_loss = self.ae.criterion(ae_y_hat, batch["y"])
 
         geom_y_hat = self.geom_transform(batch["x"])
-        geom_ae_y_hat = self.ae(geom_y_hat)
-        geom_recon_loss = self.geom_transform.criterion(geom_ae_y_hat, y)
+        geom_ae_y_hat = self.ae.encoder(geom_y_hat)
+        geom_ae_y_hat_true = self.ae.encoder(batch["y"])
+        geom_recon_loss = F.cosine_similarity(geom_ae_y_hat, geom_ae_y_hat_true).mean()
         loss = (geom_recon_loss + ae_loss) / 2
 
         # The order of these operations is important

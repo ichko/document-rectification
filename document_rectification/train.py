@@ -3,6 +3,7 @@ from argparse import Namespace
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+import torch
 from ez_torch.vis import Fig
 from pytorch_lightning import loggers
 
@@ -11,6 +12,8 @@ from document_rectification.data import DocumentsDataModule
 from document_rectification.models.document_ae_rectifier import DocumentAERectifier
 
 logger = logging.getLogger()
+
+torch.autograd.set_detect_anomaly(True)
 
 
 def main():
@@ -46,7 +49,7 @@ def main():
         logger=[logger],
         log_every_n_steps=1,
         flush_logs_every_n_steps=3,
-        max_epochs=1500,
+        max_epochs=15_000,
     )
     trainer.fit(model, datamodule=dm)
 
