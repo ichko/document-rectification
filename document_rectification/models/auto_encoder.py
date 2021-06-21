@@ -1,16 +1,54 @@
+from argparse import Namespace
 from typing import Any
 
 import pytorch_lightning as pl
+import torch
 import torch.nn.functional as F
 import torchvision
+import wandb
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
 from ez_torch.models import Lambda, Reshape
+from ez_torch.vis import Fig
+from matplotlib import pyplot as plt
+from pytorch_lightning import loggers
+from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 from torch import nn
 from torch.functional import Tensor
 
 
 class Encoder(nn.Module):
+    def __init__(self, latent_size):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv2d(3, 16, 3, stride=2, padding=1),
+            nn.BatchNorm2d(16, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(16, 32, 3, stride=1, padding=1),
+            nn.BatchNorm2d(32, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(32, 64, 5, stride=2, padding=1),
+            nn.BatchNorm2d(64, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(64, 128, 7, stride=1, padding=1),
+            nn.BatchNorm2d(128, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(128, 512, 1, stride=1, padding=0),
+            nn.BatchNorm2d(512, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(512, 128, 1, stride=1, padding=0),
+            nn.BatchNorm2d(128, 0.8),
+            nn.AdaptiveAvgPool2d((50, 38)),
+            nn.Conv2d(128, 1, 1, stride=1, padding=0),
+            nn.Flatten(),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        y = self.net(x)
+        return y
+
+
+class MobileNetEncoder(nn.Module):
     def __init__(self, latent_size):
         super().__init__()
         self.net = torchvision.models.mobilenet.mobilenet_v2(
@@ -20,11 +58,6 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        channel_dim = 1
-        if x.size(channel_dim) == 1:
-            repeats = [1] * x.ndim
-            repeats[channel_dim] = 3
-            x = x.repeat(*repeats)
         return self.net(x)
 
 
@@ -38,18 +71,18 @@ class Decoder(nn.Module):
             nn.BatchNorm2d(128, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Upsample(scale_factor=2),
-            nn.Conv2d(128, 64, 3, stride=1, padding=1),
-            nn.BatchNorm2d(64, 0.8),
+            nn.Conv2d(128, 254, 3, stride=1, padding=1),
+            nn.BatchNorm2d(254, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Upsample(scale_factor=2),
-            nn.Conv2d(64, 64, 3, stride=1, padding=1),
-            nn.BatchNorm2d(64, 0.8),
+            nn.Conv2d(254, 128, 3, stride=1, padding=1),
+            nn.BatchNorm2d(128, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Upsample(scale_factor=1.25),
-            nn.Conv2d(64, 64, 3, stride=1, padding=1),
-            nn.BatchNorm2d(64, 0.8),
+            nn.Conv2d(128, 32, 3, stride=1, padding=1),
+            nn.BatchNorm2d(32, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(64, 1, 3, stride=1, padding=1),
+            nn.Conv2d(32, 1, 3, stride=1, padding=1),
             nn.Sigmoid(),
             Lambda(lambda x: x.repeat(1, image_channels, 1, 1)),  # make 3 channel image
         )
@@ -59,13 +92,16 @@ class Decoder(nn.Module):
 
 
 class AutoEncoder(pl.LightningModule):
-    def __init__(self, image_channels, latent_size, decoder_initial_reshape):
+    def __init__(
+        self, image_channels, latent_size, decoder_initial_reshape, plot_dataloader=None
+    ):
         super().__init__()
         self.encoder = Encoder(latent_size=latent_size)
         self.decoder = Decoder(
             image_channels=image_channels,
             initial_reshape=decoder_initial_reshape,
         )
+        self.plot_dataloader = plot_dataloader
 
     def forward(self, x: Tensor) -> Tensor:
         # TODO: Feed image in grayscale form?
