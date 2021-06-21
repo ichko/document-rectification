@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from ez_torch.vis import Fig
-from pytorch_lightning import loggers
+from pytorch_lightning import callbacks, loggers
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
@@ -44,12 +45,21 @@ def main():
         hparams=hparams,
     ).to(DEVICE)
 
+    checkpoint_callback = ModelCheckpoint(
+        monitor="loss",
+        dirpath=".checkpoints/",
+        filename="doc-rect-ae-{epoch:02d}-{loss:.2f}",
+        save_top_k=5,
+        mode="min",
+    )
+
     trainer = pl.Trainer(
         gpus=1 if DEVICE == "cuda" else None,
+        callbacks=[checkpoint_callback],
         logger=[logger],
         log_every_n_steps=1,
         flush_logs_every_n_steps=3,
-        max_epochs=15_000,
+        max_epochs=150_000,
     )
     trainer.fit(model, datamodule=dm)
 
