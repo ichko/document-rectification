@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
 import torch.nn.functional as F
 import torchvision
-import wandb
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
 from ez_torch.models import SpatialUVOffsetTransformer
@@ -15,7 +13,7 @@ class GeometricTransformModel(pl.LightningModule):
     def __init__(self, res_w, res_h):
         super().__init__()
         self.feature_extractor = mobilenet_v2(
-            pretrained=True,
+            pretrained=False,
             num_classes=1000,
         )
         self.st = SpatialUVOffsetTransformer(
