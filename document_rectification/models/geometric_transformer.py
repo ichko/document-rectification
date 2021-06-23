@@ -1,23 +1,56 @@
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch.nn.functional as F
-import torchvision
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
 from ez_torch.models import SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
+from torch import nn
+from torch.functional import Tensor
 from torchvision.models.mobilenetv2 import mobilenet_v2
+
+
+class FeatureExtractor(nn.Module):
+    def __init__(self, squeeze_size):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv2d(3, 16, 3, stride=2, padding=1),
+            nn.BatchNorm2d(16, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(16, 32, 3, stride=1, padding=1),
+            nn.BatchNorm2d(32, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(32, 64, 5, stride=2, padding=1),
+            nn.BatchNorm2d(64, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(64, 128, 7, stride=1, padding=1),
+            nn.BatchNorm2d(128, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(128, 512, 1, stride=1, padding=0),
+            nn.BatchNorm2d(512, 0.8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(512, 128, 1, stride=1, padding=0),
+            nn.BatchNorm2d(128, 0.8),
+            nn.AdaptiveAvgPool2d((10, 10)),
+            nn.Conv2d(128, 1, 1, stride=1, padding=0),
+            nn.Flatten(),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        y = self.net(x)
+        return y
 
 
 class GeometricTransformModel(pl.LightningModule):
     def __init__(self, res_w, res_h):
         super().__init__()
-        self.feature_extractor = mobilenet_v2(
-            pretrained=False,
-            num_classes=1000,
-        )
+        # self.feature_extractor = mobilenet_v2(
+        #     pretrained=False,
+        #     num_classes=1000,
+        # )
+        self.feature_extractor = FeatureExtractor(squeeze_size=100)
         self.st = SpatialUVOffsetTransformer(
-            i=1000,
+            i=100,
             uv_resolution_shape=(res_w, res_h),
         )
 
@@ -43,7 +76,6 @@ def sanity_check():
     model = GeometricTransformModel(
         res_w=5,
         res_h=5,
-        datamodule=datamodule,
     ).to(DEVICE)
 
     dl = datamodule.plot_dataloader()
