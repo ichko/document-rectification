@@ -39,8 +39,8 @@ def main():
         image_channels=3,
         ae_latent_size=50 * 38,
         ae_decoder_initial_reshape=[50, 38],
-        transform_res_w=2,
-        transform_res_h=2,
+        transform_res_w=5,
+        transform_res_h=5,
         plot_dataloader=dm.plot_dataloader(),
         hparams=hparams,
     ).to(DEVICE)
@@ -79,7 +79,7 @@ def sanity_check():
         image_channels=3,
         ae_latent_size=50 * 38,
         ae_decoder_initial_reshape=[50, 38],
-        transform_res_w=5,
+        transform_res_w=10,
         transform_res_h=5,
         datamodule=dm,
     ).to(DEVICE)

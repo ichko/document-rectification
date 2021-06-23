@@ -55,7 +55,7 @@ class DocumentAERectifier(pl.LightningModule):
         geom_opt = torch.optim.Adam(
             [
                 # {"params": self.ae.parameters(), "lr": 1e-8},
-                {"params": self.geom_transform.parameters(), "lr": 1e-5},
+                {"params": self.geom_transform.parameters(), "lr": 1e-4},
             ]
         )
         ae_opt = torch.optim.Adam(self.ae.parameters(), lr=1e-3)
@@ -73,26 +73,32 @@ class DocumentAERectifier(pl.LightningModule):
         ae_loss = self.ae.criterion(ae_y_hat, batch["y"])
 
         geom_y_hat = self.geom_transform(batch["x"])
-        geom_ae_y_hat = self.ae.encoder(geom_y_hat)
-        geom_ae_y_hat_true = self.ae.encoder(batch["y"])
-        geom_recon_loss = -F.cosine_similarity(
-            geom_ae_y_hat,
-            geom_ae_y_hat_true,
-        ).mean()
-        loss = (geom_recon_loss + ae_loss) / 2
+        geom_ae_emb_y_hat_pred = self.ae.encoder(geom_y_hat)
+        geom_ae_emb_y_hat_true = self.ae.encoder(batch["y"])
+        # geom_emb_recon_loss = -F.cosine_similarity(
+        #     geom_ae_emb_y_hat_pred,
+        #     geom_ae_emb_y_hat_true,
+        # ).mean()
+        geom_emb_recon_loss = F.mse_loss(
+            geom_ae_emb_y_hat_pred,
+            geom_ae_emb_y_hat_true,
+        )
+        recon_loss = F.binary_cross_entropy(geom_y_hat, batch["y"])
+
+        loss = (geom_emb_recon_loss + ae_loss + recon_loss) / 3
 
         # The order of these operations is important
         geom_opt.zero_grad()
         ae_opt.zero_grad()
 
-        self.manual_backward(geom_recon_loss)
         self.manual_backward(ae_loss)
+        self.manual_backward(geom_emb_recon_loss)
 
         geom_opt.step()
         ae_opt.step()
 
         self.log("loss", loss)
-        self.log("geom_recon_loss", geom_recon_loss)
+        self.log("geom_recon_loss", geom_emb_recon_loss)
         self.log("id_recon_loss", ae_loss)
 
         return loss
