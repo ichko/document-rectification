@@ -121,7 +121,10 @@ class DocumentsDataModule(pl.LightningDataModule):
 
     def plot_dataloader(self):
         dl = get_augmented_dl(
-            self.TRAIN_PATH, bs=self.plot_bs, shuffle=False, device=self.device
+            self.TRAIN_PATH,
+            bs=self.plot_bs,
+            shuffle=False,
+            device=self.device,
         )
         example_batch = next(iter(dl))
         """

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch.nn.functional as F
+import torchvision
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
 from ez_torch.models import SpatialUVOffsetTransformer
@@ -31,7 +32,7 @@ class FeatureExtractor(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(512, 128, 1, stride=1, padding=0),
             nn.BatchNorm2d(128, 0.8),
-            nn.AdaptiveAvgPool2d((10, 10)),
+            nn.AdaptiveAvgPool2d((32, 16)),
             nn.Conv2d(128, 1, 1, stride=1, padding=0),
             nn.Flatten(),
         )
@@ -48,9 +49,14 @@ class GeometricTransformModel(pl.LightningModule):
         #     pretrained=False,
         #     num_classes=1000,
         # )
-        self.feature_extractor = FeatureExtractor(squeeze_size=100)
+        # self.feature_extractor = FeatureExtractor(squeeze_size=100)
+
+        self.feature_extractor = torchvision.models.resnet18(
+            pretrained=False,
+            progress=True,
+        )
         self.st = SpatialUVOffsetTransformer(
-            i=100,
+            i=1000,
             uv_resolution_shape=(res_w, res_h),
         )
 
