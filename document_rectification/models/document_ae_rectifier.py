@@ -106,7 +106,6 @@ class DocumentAERectifier(pl.LightningModule):
     def on_epoch_start(self):
         with torch.no_grad():
             self.eval()
-            # TODO: This logs only on the first call
             for batch in self.plot_dataloader:
                 info = self.info_forward(batch["x"])
 
