@@ -83,22 +83,34 @@ class DocumentGANRectifier(pl.LightningModule):
         }
 
     def configure_optimizers(self):
+        id_optim = torch.optim.Adam(self.generator.parameters(), lr=1e-3)
         g_optim = torch.optim.Adam(self.generator.parameters(), lr=1e-5)
         d_optim = torch.optim.Adam(self.discriminator.parameters(), lr=1e-3)
-        return g_optim, d_optim
+        return id_optim, g_optim, d_optim
 
     def training_step(self, batch, _batch_index):
         self.train()
 
-        g_optim, d_optim = self.optimizers()
+        id_optim, g_optim, d_optim = self.optimizers()
         x, y = batch["x"], batch["y"]
         bs = y.size(0)
+        loss = 0
+        # Generator retains scanned documents (identity)
 
+        id_optim.zero_grad()
+        y_pred = self.generator(y)
+        id_loss = F.binary_cross_entropy(y_pred, y)
+        self.manual_backward(id_loss, retain_graph=True)
+        self.log("id_loss", id_loss)
+        id_optim.step()
+        loss += id_loss
+
+        # GAN Training
         real_label = 1.0
         fake_label = 0.0
 
+        # Train the discriminator
         d_optim.zero_grad()
-
         real_y = y
         label = torch.full((bs, 1), real_label, device=self.device)
         real_pred = self.discriminator(real_y)
@@ -110,12 +122,13 @@ class DocumentGANRectifier(pl.LightningModule):
         fake_pred = self.discriminator(fake_y)
         fake_loss = F.binary_cross_entropy(fake_pred, label)
         self.manual_backward(fake_loss, retain_graph=True)
-
         d_loss = real_loss + fake_loss
         self.log("d_loss", d_loss)
 
         d_optim.step()
+        loss += d_loss
 
+        # Train the generator
         g_optim.zero_grad()
 
         label.fill_(real_label)
@@ -128,8 +141,9 @@ class DocumentGANRectifier(pl.LightningModule):
 
         if d_loss < 0.15:
             g_optim.step()
+        loss += g_loss
 
-        self.log("loss", d_loss + g_loss)
+        self.log("loss", loss)
 
     def on_epoch_start(self):
         with torch.no_grad():
