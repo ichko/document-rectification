@@ -11,6 +11,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
 from document_rectification.models.document_ae_rectifier import DocumentAERectifier
+from document_rectification.models.document_gan_rectifier import DocumentGANRectifier
 
 logger = logging.getLogger()
 
@@ -35,15 +36,22 @@ def main():
         shuffle=True,
         device=DEVICE,
     )
-    model = DocumentAERectifier(
+    # model = DocumentAERectifier(
+    #     image_channels=3,
+    #     ae_latent_size=50 * 38,
+    #     ae_decoder_initial_reshape=[50, 38],
+    #     transform_res_w=5,
+    #     transform_res_h=5,
+    #     plot_dataloader=dm.plot_dataloader(),
+    #     hparams=hparams,
+    # )
+    model = DocumentGANRectifier(
         image_channels=3,
-        ae_latent_size=50 * 38,
-        ae_decoder_initial_reshape=[50, 38],
         transform_res_w=5,
         transform_res_h=5,
         plot_dataloader=dm.plot_dataloader(),
         hparams=hparams,
-    ).to(DEVICE)
+    )
 
     checkpoint_callback = ModelCheckpoint(
         monitor="loss",
