@@ -12,7 +12,7 @@ from torchvision.models.mobilenetv2 import mobilenet_v2
 
 
 class FeatureExtractor(nn.Module):
-    def __init__(self, squeeze_size):
+    def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
             nn.Conv2d(3, 16, 3, stride=2, padding=1),
@@ -49,14 +49,14 @@ class GeometricTransformModel(pl.LightningModule):
         #     pretrained=False,
         #     num_classes=1000,
         # )
-        # self.feature_extractor = FeatureExtractor(squeeze_size=100)
+        self.feature_extractor = FeatureExtractor()
 
-        self.feature_extractor = torchvision.models.resnet18(
-            pretrained=False,
-            progress=True,
-        )
+        # self.feature_extractor = torchvision.models.resnet18(
+        #     pretrained=False,
+        #     progress=True,
+        # )
         self.st = SpatialUVOffsetTransformer(
-            i=1000,
+            i=512,
             uv_resolution_shape=(res_w, res_h),
         )
 
