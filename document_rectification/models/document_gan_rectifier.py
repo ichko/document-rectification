@@ -83,7 +83,9 @@ class DocumentGANRectifier(pl.LightningModule):
         }
 
     def configure_optimizers(self):
-        id_optim = torch.optim.Adam(self.generator.parameters(), lr=1e-3)
+        id_optim = torch.optim.Adam(
+            self.generator.parameters(), lr=0.0001, betas=(0.95, 0.999)
+        )
         g_optim = torch.optim.Adam(self.generator.parameters(), lr=1e-5)
         d_optim = torch.optim.Adam(self.discriminator.parameters(), lr=1e-3)
         return id_optim, g_optim, d_optim
@@ -95,62 +97,63 @@ class DocumentGANRectifier(pl.LightningModule):
         x, y = batch["x"], batch["y"]
         bs = y.size(0)
         loss = 0
-        # Generator retains scanned documents (identity)
 
+        # Generator retains scanned documents (identity)
         id_optim.zero_grad()
         y_pred = self.generator(y)
         id_loss = F.binary_cross_entropy(y_pred, y)
-        self.manual_backward(id_loss, retain_graph=True)
+        self.manual_backward(id_loss)
         self.log("id_loss", id_loss)
         id_optim.step()
         loss += id_loss
 
-        # GAN Training
-        real_label = 1.0
-        fake_label = 0.0
+        # # GAN Training
+        # real_label = 1.0
+        # fake_label = 0.0
 
-        # Train the discriminator
-        d_optim.zero_grad()
-        real_y = y
-        label = torch.full((bs, 1), real_label, device=self.device)
-        real_pred = self.discriminator(real_y)
-        real_loss = F.binary_cross_entropy(real_pred, label)
-        self.manual_backward(real_loss, retain_graph=True)
+        # # Train the discriminator
+        # d_optim.zero_grad()
+        # real_y = y
+        # label = torch.full((bs, 1), real_label, device=self.device)
+        # real_pred = self.discriminator(real_y)
+        # real_loss = F.binary_cross_entropy(real_pred, label)
+        # self.manual_backward(real_loss, retain_graph=True)
 
-        fake_y = self.generator(x)
-        label = label.fill_(fake_label)
-        fake_pred = self.discriminator(fake_y)
-        fake_loss = F.binary_cross_entropy(fake_pred, label)
-        self.manual_backward(fake_loss, retain_graph=True)
-        d_loss = real_loss + fake_loss
-        self.log("d_loss", d_loss)
+        # fake_y = self.generator(x)
+        # label = label.fill_(fake_label)
+        # fake_pred = self.discriminator(fake_y)
+        # fake_loss = F.binary_cross_entropy(fake_pred, label)
+        # self.manual_backward(fake_loss, retain_graph=True)
+        # d_loss = real_loss + fake_loss
+        # self.log("d_loss", d_loss)
 
-        d_optim.step()
-        loss += d_loss
+        # d_optim.step()
+        # loss += d_loss
 
-        # Train the generator
-        g_optim.zero_grad()
+        # # Train the generator
+        # g_optim.zero_grad()
 
-        label.fill_(real_label)
-        fake_pred = self.discriminator(fake_y)
-        fake_loss = F.binary_cross_entropy(fake_pred, label)
-        self.manual_backward(fake_loss)
+        # label.fill_(real_label)
+        # fake_pred = self.discriminator(fake_y)
+        # fake_loss = F.binary_cross_entropy(fake_pred, label)
+        # self.manual_backward(fake_loss)
 
-        g_loss = fake_loss
-        self.log("g_loss", g_loss)
+        # g_loss = fake_loss
+        # self.log("g_loss", g_loss)
 
-        if d_loss < 0.15:
-            g_optim.step()
-        loss += g_loss
+        # if d_loss < 0.15:
+        #     g_optim.step()
+        # loss += g_loss
 
         self.log("loss", loss)
+        return loss
 
     def on_epoch_start(self):
         with torch.no_grad():
             self.eval()
             for batch in self.plot_dataloader:
                 x, y = batch["x"], batch["y"]
-                info = self.info_forward(x)
+                info = self.info_forward(y)
                 pred = info["generator_pred"]
 
                 fig = Fig(nr=1, nc=3, figsize=(15, 10))

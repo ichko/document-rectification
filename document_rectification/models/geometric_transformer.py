@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torchvision
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
-from ez_torch.models import SpatialUVOffsetTransformer
+from ez_torch.models import SpatialLinearTransformer, SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
 from torch import nn
 from torch.functional import Tensor
@@ -54,6 +54,11 @@ class GeometricTransformModel(pl.LightningModule):
         # self.feature_extractor = torchvision.models.resnet18(
         #     pretrained=False,
         #     progress=True,
+        # )
+        # self.st = SpatialLinearTransformer(
+        #     i=512,
+        #     num_channels=1,
+        #     only_translations=False,
         # )
         self.st = SpatialUVOffsetTransformer(
             i=512,
