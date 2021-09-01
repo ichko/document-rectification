@@ -186,7 +186,7 @@ def main():
         train_bs=6,
         val_bs=8,
         plot_bs=8,
-        shuffle=True,
+        shuffle=False,
         device=DEVICE,
     )
 
