@@ -33,7 +33,7 @@ def main():
         train_bs=6,
         val_bs=8,
         plot_bs=8,
-        shuffle=True,
+        shuffle=False,
         device=DEVICE,
     )
     # model = DocumentAERectifier(
@@ -47,8 +47,7 @@ def main():
     # )
     model = DocumentGANRectifier(
         image_channels=3,
-        transform_res_w=5,
-        transform_res_h=5,
+        transform_res_size=(2, 2),
         plot_dataloader=dm.plot_dataloader(),
         hparams=hparams,
     )
@@ -87,8 +86,8 @@ def sanity_check():
         image_channels=3,
         ae_latent_size=50 * 38,
         ae_decoder_initial_reshape=[50, 38],
-        transform_res_w=10,
-        transform_res_h=5,
+        transform_res_w=16,
+        transform_res_h=32,
         datamodule=dm,
     ).to(DEVICE)
     info = model.info_forward(batch["x"])
