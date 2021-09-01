@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+import torch
 import torch.nn.functional as F
 import torchvision
 from document_rectification.common import DEVICE
@@ -16,25 +17,26 @@ class FeatureExtractor(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
             nn.Conv2d(3, 16, 3, stride=2, padding=1),
-            nn.BatchNorm2d(16, 0.8),
+            # nn.BatchNorm2d(16, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(16, 32, 3, stride=1, padding=1),
-            nn.BatchNorm2d(32, 0.8),
+            nn.Conv2d(16, 32, 3, stride=2, padding=1),
+            # nn.BatchNorm2d(32, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(32, 64, 5, stride=2, padding=1),
-            nn.BatchNorm2d(64, 0.8),
+            nn.Conv2d(32, 64, 3, stride=2, padding=1),
+            # nn.BatchNorm2d(64, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(64, 128, 7, stride=1, padding=1),
-            nn.BatchNorm2d(128, 0.8),
+            nn.Conv2d(64, 64, 5, stride=2, padding=1),
+            # nn.BatchNorm2d(128, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(128, 512, 1, stride=1, padding=0),
-            nn.BatchNorm2d(512, 0.8),
+            nn.Conv2d(64, 128, 5, stride=1, padding=0),
+            # nn.BatchNorm2d(512, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(512, 128, 1, stride=1, padding=0),
-            nn.BatchNorm2d(128, 0.8),
-            nn.AdaptiveAvgPool2d((32, 16)),
+            nn.Conv2d(128, 128, 3, stride=2, padding=0),
+            # nn.BatchNorm2d(128, 0.8),
+            # nn.AdaptiveAvgPool2d((32, 16)),
             nn.Conv2d(128, 1, 1, stride=1, padding=0),
             nn.Flatten(),
+            nn.ReLU(inplace=True),
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -43,31 +45,27 @@ class FeatureExtractor(nn.Module):
 
 
 class GeometricTransformModel(pl.LightningModule):
-    def __init__(self, res_w, res_h):
+    def __init__(self, transform_res_size):
         super().__init__()
-        # self.feature_extractor = mobilenet_v2(
-        #     pretrained=False,
-        #     num_classes=1000,
-        # )
-        self.feature_extractor = FeatureExtractor()
+        res_w, res_h = transform_res_size
 
-        # self.feature_extractor = torchvision.models.resnet18(
-        #     pretrained=False,
-        #     progress=True,
-        # )
-        # self.st = SpatialLinearTransformer(
-        #     i=512,
-        #     num_channels=1,
-        #     only_translations=False,
-        # )
+        # self.feature_extractor = FeatureExtractor()
+        self.feature_extractor = nn.Sequential(
+            torchvision.models.resnet18(
+                pretrained=False,
+                progress=True,
+                num_classes=128,
+            ),
+            nn.ReLU(inplace=True),
+        )
         self.st = SpatialUVOffsetTransformer(
-            i=512,
+            inp=128,
             uv_resolution_shape=(res_w, res_h),
         )
 
     def forward(self, x):
         self.features = self.feature_extractor(x)
-        x = x.mean(dim=1, keepdim=True)
+        x = torch.mean(x, dim=1, keepdim=True)
         y_hat = self.st([self.features, x])
         y_hat = y_hat.repeat(1, 3, 1, 1)
         return y_hat
