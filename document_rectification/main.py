@@ -2,7 +2,7 @@ import os
 
 
 def run_wandb_local():
-    os.system("poetry run wandb local")
+    os.system("poetry run wandb local --port 8000")
 
 
 def run_tensorboard_server():
