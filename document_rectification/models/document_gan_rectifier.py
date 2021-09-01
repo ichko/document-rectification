@@ -53,8 +53,7 @@ class DocumentGANRectifier(pl.LightningModule):
     def __init__(
         self,
         image_channels,
-        transform_res_w,
-        transform_res_h,
+        transform_res_size,
         plot_dataloader,
         hparams,
     ):
@@ -62,10 +61,7 @@ class DocumentGANRectifier(pl.LightningModule):
 
         self.hp = hparams
         self.plot_dataloader = plot_dataloader
-        self.generator = GeometricTransformModel(
-            res_w=transform_res_w,
-            res_h=transform_res_h,
-        )
+        self.generator = GeometricTransformModel(transform_res_size=transform_res_size)
         self.discriminator = Discriminator(image_channels)
         self.automatic_optimization = False
 
@@ -76,16 +72,14 @@ class DocumentGANRectifier(pl.LightningModule):
 
     def info_forward(self, x: Tensor) -> Tensor:
         geom_out = self.generator(x)
-        discriminator_out = self.discriminator(geom_out)
+        # discriminator_out = self.discriminator(geom_out)
         return {
             "generator_pred": geom_out,
-            "discriminator_pred": discriminator_out,
+            # "discriminator_pred": discriminator_out,
         }
 
     def configure_optimizers(self):
-        id_optim = torch.optim.Adam(
-            self.generator.parameters(), lr=0.0001, betas=(0.95, 0.999)
-        )
+        id_optim = torch.optim.SGD(self.generator.parameters(), lr=0.00001)
         g_optim = torch.optim.Adam(self.generator.parameters(), lr=1e-5)
         d_optim = torch.optim.Adam(self.discriminator.parameters(), lr=1e-3)
         return id_optim, g_optim, d_optim
@@ -106,6 +100,7 @@ class DocumentGANRectifier(pl.LightningModule):
         self.log("id_loss", id_loss)
         id_optim.step()
         loss += id_loss
+        print(loss)
 
         # # GAN Training
         # real_label = 1.0
