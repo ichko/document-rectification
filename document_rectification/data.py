@@ -56,7 +56,7 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
 
     def mapper(batch, _idx):
         X, _ = batch
-        X = X.to(device)
+        X = X.to(device).mean(dim=1, keepdim=True)
         params = augmentor.forward_parameters(X.shape, device=device)
 
         mask = torch.ones_like(X, device=device)

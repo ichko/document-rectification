@@ -44,7 +44,7 @@ class FeatureExtractor(nn.Module):
         return y
 
 
-class GeometricTransformModel(pl.LightningModule):
+class GeometricTransformModel(nn.Module):
     def __init__(self, transform_res_size):
         super().__init__()
         res_w, res_h = transform_res_size
@@ -53,14 +53,15 @@ class GeometricTransformModel(pl.LightningModule):
         self.feature_extractor = nn.Sequential(
             torchvision.models.resnet18(
                 pretrained=False,
-                progress=True,
-                num_classes=128,
+                progress=False,
+                num_classes=32,
             ),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
         )
         self.st = SpatialUVOffsetTransformer(
-            inp=128,
+            inp=32,
             uv_resolution_shape=(res_w, res_h),
+            weight_mult_factor=0.01,
         )
 
     def forward(self, x):
@@ -83,19 +84,16 @@ def sanity_check():
         device=DEVICE,
     )
     model = GeometricTransformModel(
-        res_w=5,
-        res_h=5,
+        transform_res_size=(2, 2),
     ).to(DEVICE)
+    optim = torch.optim.SGD(model.parameters(), lr=0.00001)
 
     dl = datamodule.plot_dataloader()
     batch = next(iter(dl))
 
-    x = batch["x"]
-    y = model(x)
+    x = batch["y"]
 
-    print(x.shape, y.shape)
-
-    fig = Fig(nr=1, nc=3, figsize=(15, 10))
+    fig = Fig(nr=1, nc=3, ion=True, figsize=(15, 10))
     im = batch["x"].ez.grid(nr=2).channel_last.np
     fig[0].imshow(im)
     fig[0].ax.set_title("Input")
@@ -103,12 +101,22 @@ def sanity_check():
     im = batch["y"].ez.grid(nr=2).channel_last.np
     fig[1].imshow(im)
     fig[1].ax.set_title("Output")
-
-    im = y.ez.grid(nr=2).channel_last.np
-    fig[2].imshow(im)
     fig[2].ax.set_title("Predictions")
 
-    plt.tight_layout()
+    for _ in range(100):
+        y = model(x)
+        loss = model.criterion(y, x)
+
+        optim.zero_grad()
+        loss.backward()
+        optim.step()
+
+        im = y.ez.grid(nr=2).channel_last.np
+        fig[2].imshow(im)
+        fig.update()
+        print(loss.item())
+
+    # plt.tight_layout()
     plt.show()
 
 
