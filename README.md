@@ -4,7 +4,7 @@ Experiments on document rectification
 
 **Task**
 - Input an image with a document on it - skewed and/or over a background
-- Output only the document with straightened lines.
+- Output only the document with straightened lines
 
 **Approach**
 - Get dataset with scanned documents
