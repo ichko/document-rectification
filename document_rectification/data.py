@@ -60,8 +60,8 @@ def get_augmented_dl(path, bs, shuffle, device="cpu"):
         params = augmentor.forward_parameters(X.shape, device=device)
 
         mask = torch.ones_like(X, device=device)
-        bg = torch.ones_like(X, device=device)
-        bg[:, 1] = 0
+        bg = torch.rand_like(X, device=device)
+        # bg[:, :] = 0
 
         transformed_X = augmentor(X, params)
         mask = augmentor(mask, params)
