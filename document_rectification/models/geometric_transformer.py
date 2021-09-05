@@ -10,7 +10,7 @@ from ez_torch.models import SpatialLinearTransformer, SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
 from torch import nn
 from torch.functional import Tensor
-from torchvision.models.mobilenetv2 import mobilenet_v2
+from tqdm.auto import tqdm
 
 
 class FeatureExtractor(nn.Module):
@@ -64,6 +64,10 @@ class GeometricTransformModel(nn.Module):
             uv_resolution_shape=(res_w, res_h),
             weight_mult_factor=1,
         )
+        # self.st = SpatialLinearTransformer(
+        #     i=32,
+        #     num_channels=1,
+        # )
 
     def forward(self, x):
         self.features = self.feature_extractor(x)
@@ -78,7 +82,7 @@ class GeometricTransformModel(nn.Module):
         # are getting grayer (blended with the other colors), which might
         # cause BCE to never be "happy"
         # Also BCE can become really large in cases where we predict really far away from the true label.
-        blend = 0.95
+        blend = 1
         loss = F.mse_loss(y_hat, y) * blend
         loss += (self.st.inferred_offset.abs().mean()) * (
             1 - blend
@@ -87,10 +91,14 @@ class GeometricTransformModel(nn.Module):
 
 
 def sanity_check():
+    """
+    TODO: Before continuing setup a way to record Fig anims.
+    Generic please!
+    """
     model = GeometricTransformModel(
-        transform_res_size=(3, 3),
+        transform_res_size=(10, 5),
     ).to(DEVICE)
-    optim = torch.optim.SGD(model.parameters(), lr=0.1)
+    optim = torch.optim.SGD(model.parameters(), lr=0.05)
 
     dataset = "docs"
     if dataset == "mnist":
@@ -123,7 +131,8 @@ def sanity_check():
     fig[1].ax.set_title("Output")
     fig[2].ax.set_title("Predictions")
 
-    for _ in range(100):
+    bar = tqdm(range(10000))
+    for _ in bar:
         y_hat = model(x)
         loss = model.criterion(y_hat, y)
 
@@ -134,7 +143,8 @@ def sanity_check():
         im = y_hat.ez.grid(nr=2).channel_last.np
         fig[2].imshow(im)
         fig.update()
-        print(loss.item())
+
+        bar.set_description(f"Loss: {loss.item():0.6f}")
 
     # plt.tight_layout()
     plt.show()
