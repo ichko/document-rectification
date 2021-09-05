@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torchvision
 from document_rectification.common import DEVICE
 from document_rectification.data import DocumentsDataModule
+from ez_torch.data import get_mnist_dl
 from ez_torch.models import SpatialLinearTransformer, SpatialUVOffsetTransformer
 from ez_torch.vis import Fig
 from torch import nn
@@ -61,7 +62,7 @@ class GeometricTransformModel(nn.Module):
         self.st = SpatialUVOffsetTransformer(
             inp=32,
             uv_resolution_shape=(res_w, res_h),
-            weight_mult_factor=0.01,
+            weight_mult_factor=0.5,
         )
 
     def forward(self, x):
@@ -72,33 +73,46 @@ class GeometricTransformModel(nn.Module):
         return y_hat
 
     def criterion(self, y_hat, y):
-        return F.binary_cross_entropy(y_hat, y)
+        # Switching to MSE fixes exploding loss.
+        # A hypothesis for this is that whe we resize we our "whites" and "blacks"
+        # are getting grayer (blended with the other colors), which might
+        # cause BCE to never be "happy"
+        # Also BCE can become really large in cases where we predict really far away from the true label.
+        loss = F.mse_loss(y_hat, y) * 10
+        # loss += self.st.inferred_offset.abs().mean()  # Offset size loss
+        return loss
 
 
 def sanity_check():
-    datamodule = DocumentsDataModule(
-        train_bs=8,
-        val_bs=8,
-        plot_bs=8,
-        shuffle=False,
-        device=DEVICE,
-    )
     model = GeometricTransformModel(
-        transform_res_size=(2, 2),
+        transform_res_size=(3, 3),
     ).to(DEVICE)
-    optim = torch.optim.SGD(model.parameters(), lr=0.00001)
+    optim = torch.optim.SGD(model.parameters(), lr=0.001)
 
-    dl = datamodule.plot_dataloader()
-    batch = next(iter(dl))
+    dataset = "docs"
+    if dataset == "mnist":
+        train_loader, test_loader = get_mnist_dl(bs_test=8, bs_train=8, shuffle=False)
+        x, _y = next(iter(train_loader))
+        x = x.to(DEVICE)
+        x = x.repeat(1, 3, 1, 1)
+    else:
+        datamodule = DocumentsDataModule(
+            train_bs=8,
+            val_bs=8,
+            plot_bs=8,
+            shuffle=False,
+            device=DEVICE,
+        )
+        x = next(iter(datamodule.train_dataloader()))["y"]
 
-    x = batch["y"]
+    x = x.ez.resize(64, 64).raw
 
     fig = Fig(nr=1, nc=3, ion=True, figsize=(15, 10))
-    im = batch["x"].ez.grid(nr=2).channel_last.np
+    im = x.ez.grid(nr=2).channel_last.np
     fig[0].imshow(im)
     fig[0].ax.set_title("Input")
 
-    im = batch["y"].ez.grid(nr=2).channel_last.np
+    im = x.ez.grid(nr=2).channel_last.np
     fig[1].imshow(im)
     fig[1].ax.set_title("Output")
     fig[2].ax.set_title("Predictions")
