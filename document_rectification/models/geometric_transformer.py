@@ -50,8 +50,8 @@ class GeometricTransformModel(nn.Module):
         super().__init__()
         res_w, res_h = transform_res_size
 
-        # self.feature_extractor = FeatureExtractor()
         self.feature_extractor = nn.Sequential(
+            # FeatureExtractor(),
             torchvision.models.resnet18(
                 pretrained=False,
                 progress=False,
@@ -62,7 +62,7 @@ class GeometricTransformModel(nn.Module):
         self.st = SpatialUVOffsetTransformer(
             inp=32,
             uv_resolution_shape=(res_w, res_h),
-            weight_mult_factor=0.5,
+            weight_mult_factor=1,
         )
 
     def forward(self, x):
@@ -78,8 +78,11 @@ class GeometricTransformModel(nn.Module):
         # are getting grayer (blended with the other colors), which might
         # cause BCE to never be "happy"
         # Also BCE can become really large in cases where we predict really far away from the true label.
-        loss = F.mse_loss(y_hat, y) * 10
-        # loss += self.st.inferred_offset.abs().mean()  # Offset size loss
+        blend = 0.95
+        loss = F.mse_loss(y_hat, y) * blend
+        loss += (self.st.inferred_offset.abs().mean()) * (
+            1 - blend
+        )  # Offset size loss (Preffer smaller offsets)
         return loss
 
 
@@ -87,7 +90,7 @@ def sanity_check():
     model = GeometricTransformModel(
         transform_res_size=(3, 3),
     ).to(DEVICE)
-    optim = torch.optim.SGD(model.parameters(), lr=0.001)
+    optim = torch.optim.SGD(model.parameters(), lr=0.1)
 
     dataset = "docs"
     if dataset == "mnist":
@@ -95,6 +98,7 @@ def sanity_check():
         x, _y = next(iter(train_loader))
         x = x.to(DEVICE)
         x = x.repeat(1, 3, 1, 1)
+        y = x
     else:
         datamodule = DocumentsDataModule(
             train_bs=8,
@@ -103,29 +107,31 @@ def sanity_check():
             shuffle=False,
             device=DEVICE,
         )
-        x = next(iter(datamodule.train_dataloader()))["y"]
+        batch = next(iter(datamodule.train_dataloader()))
+        x, y = batch["x"], batch["y"]
 
-    x = x.ez.resize(64, 64).raw
+    x = x.ez.resize(200, 128).raw
+    y = y.ez.resize(200, 128).raw
 
     fig = Fig(nr=1, nc=3, ion=True, figsize=(15, 10))
     im = x.ez.grid(nr=2).channel_last.np
     fig[0].imshow(im)
     fig[0].ax.set_title("Input")
 
-    im = x.ez.grid(nr=2).channel_last.np
+    im = y.ez.grid(nr=2).channel_last.np
     fig[1].imshow(im)
     fig[1].ax.set_title("Output")
     fig[2].ax.set_title("Predictions")
 
     for _ in range(100):
-        y = model(x)
-        loss = model.criterion(y, x)
+        y_hat = model(x)
+        loss = model.criterion(y_hat, y)
 
         optim.zero_grad()
         loss.backward()
         optim.step()
 
-        im = y.ez.grid(nr=2).channel_last.np
+        im = y_hat.ez.grid(nr=2).channel_last.np
         fig[2].imshow(im)
         fig.update()
         print(loss.item())
