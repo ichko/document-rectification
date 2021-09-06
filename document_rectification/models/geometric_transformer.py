@@ -98,7 +98,7 @@ def sanity_check():
     model = GeometricTransformModel(
         transform_res_size=(10, 5),
     ).to(DEVICE)
-    optim = torch.optim.SGD(model.parameters(), lr=0.05)
+    optim = torch.optim.SGD(model.parameters(), lr=0.1)
 
     dataset = "docs"
     if dataset == "mnist":
