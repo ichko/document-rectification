@@ -12,7 +12,7 @@ from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTens
 
 from document_rectification.common import logger
 
-scale = 0.5
+scale = 0.125
 H, W = 1000, 760
 H, W = int(H * scale), int(W * scale)
 

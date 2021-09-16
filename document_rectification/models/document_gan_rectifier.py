@@ -14,6 +14,7 @@ from torch.nn.modules.activation import Sigmoid
 class Discriminator(nn.Module):
     def __init__(self, image_channels):
         super().__init__()
+        # TODO: Simplify, use pretrained generator and discriminator
         self.net = nn.Sequential(
             nn.Conv2d(image_channels, 16, 3, stride=2, padding=1),
             nn.BatchNorm2d(16, 0.8),
@@ -21,16 +22,16 @@ class Discriminator(nn.Module):
             nn.Conv2d(16, 32, 3, stride=1, padding=1),
             nn.BatchNorm2d(32, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(32, 64, 5, stride=2, padding=1),
+            nn.Conv2d(32, 64, 5, stride=1, padding=1),
             nn.BatchNorm2d(64, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(64, 128, 7, stride=2, padding=1),
+            nn.Conv2d(64, 128, 7, stride=1, padding=1),
             nn.BatchNorm2d(128, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(128, 512, 3, stride=2, padding=0),
+            nn.Conv2d(128, 512, 3, stride=1, padding=0),
             nn.BatchNorm2d(512, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(512, 128, 3, stride=2, padding=0),
+            nn.Conv2d(512, 128, 3, stride=1, padding=0),
             nn.BatchNorm2d(128, 0.8),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(128, 32, 3, stride=2, padding=0),
@@ -40,7 +41,7 @@ class Discriminator(nn.Module):
             nn.BatchNorm2d(1, 0.8),
             nn.Flatten(),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(24, 1),
+            nn.Linear(468, 1),
             nn.Sigmoid(),
         )
 
@@ -92,10 +93,14 @@ class DocumentGANRectifier(pl.LightningModule):
         bs = y.size(0)
         loss = 0
 
+        def norm(t):
+            return t
+
         # Generator retains scanned documents (identity)
         id_optim.zero_grad()
         y_pred = self.generator(y)
         id_loss = F.mse_loss(y_pred, y)
+        id_loss = norm(id_loss)
         self.manual_backward(id_loss)
         self.log("id_loss", id_loss)
         id_optim.step()
@@ -111,12 +116,14 @@ class DocumentGANRectifier(pl.LightningModule):
         label = torch.full((bs, 1), real_label, device=self.device)
         real_pred = self.discriminator(real_y)
         real_loss = F.binary_cross_entropy(real_pred, label)
+        real_loss = norm(real_loss)
         self.manual_backward(real_loss, retain_graph=True)
 
         fake_y = self.generator(x)
         label = label.fill_(fake_label)
         fake_pred = self.discriminator(fake_y)
         fake_loss = F.binary_cross_entropy(fake_pred, label)
+        fake_loss = norm(fake_loss)
         self.manual_backward(fake_loss, retain_graph=True)
         d_loss = real_loss + fake_loss
         self.log("d_loss", d_loss)
@@ -130,6 +137,7 @@ class DocumentGANRectifier(pl.LightningModule):
         label.fill_(real_label)
         fake_pred = self.discriminator(fake_y)
         fake_loss = F.binary_cross_entropy(fake_pred, label)
+        fake_loss = norm(fake_loss)
         self.manual_backward(fake_loss)
 
         g_loss = fake_loss

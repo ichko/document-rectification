@@ -49,7 +49,7 @@ class DocumentAERectifier(pl.LightningModule):
     def criterion(self, y_hat, y):
         y = y.mean(dim=1, keepdim=True)
         y_hat = y_hat.mean(dim=1, keepdim=True)
-        return F.binary_cross_entropy(y_hat, y)
+        return F.mse_loss(y_hat, y)
 
     def configure_optimizers(self):
         geom_opt = torch.optim.Adam(
